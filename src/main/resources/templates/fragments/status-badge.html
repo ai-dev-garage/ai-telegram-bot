@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<span th:fragment="badge(label, badgeClass)"
+      th:text="${label}"
+      th:classappend="${badgeClass}"
+      class="inline-block px-2 py-0.5 rounded text-xs font-medium leading-5">
+</span>
+</html>

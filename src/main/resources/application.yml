@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: ai-telegram-bot
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/ai_dev_garage_runner}
+    username: ${DB_USER:runner}
+    password: ${DB_PASSWORD:runner}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: ${RUNNER_PORT:8765}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  logging:
+    file:
+      path: ${APP_LOG_PATH:logs}
+    rolling:
+      max-history: ${APP_LOG_MAX_HISTORY:30}
+      max-file-size: ${APP_LOG_MAX_FILE_SIZE:10MB}
+      total-size-cap: ${APP_LOG_TOTAL_SIZE_CAP:1GB}
+  runner:
+    default-timeout-seconds: 300
+    poll-interval-ms: 2000
+    max-log-tail: 500
+    agent-runtime: ${AGENT_RUNTIME:cursor}
+    agent-tasks-dir: ${AGENT_TASKS_DIR:${user.home}/.ai-dev-garage/agent-tasks}
+    executor-id: ${EXECUTOR_ID:default}
+    policy-path: ${RUNNER_POLICY_PATH:}
+    auth-token: ${RUNNER_AUTH_TOKEN:}
+    allowed-navigation-paths: ${ALLOWED_NAVIGATION_PATHS:}
+    task-auth-secret-phrase: ${TASK_AUTH_SECRET_PHRASE:}
+    task-auth-hmac-secret: ${TASK_AUTH_HMAC_SECRET:}
+    task-source-id: ${TASK_SOURCE_ID:ai-telegram-bot}
+    task-trust-marker-line: "[TASK_RUNNER_TRUSTED]"
+    plans-export-dir: ${PLANS_EXPORT_DIR:${user.home}/.ai-dev-garage/plans}
+  cursor:
+    cli-invoke: ${CURSOR_CLI_INVOKE:false}
+    workspace: ${CURSOR_CLI_WORKSPACE:${AGENT_CLI_WORKSPACE:}}
+    prompt: ${CURSOR_CLI_PROMPT:Process the oldest pending agent task. Read task-*.json from the pending directory under AGENT_TASKS_DIR, run the process-pending-agent-task workflow, write result-{jobId}.json to the results directory, then delete the pending file. Summarize when done.}
+    plan-prompt: ${CURSOR_PLAN_PROMPT:List each question on its own line ending with '?'. If you want to offer choices, list them as bullet points below the question.}
+  claude:
+    cli-invoke: ${CLAUDE_CLI_INVOKE:false}
+    workspace: ${CLAUDE_CLI_WORKSPACE:${AGENT_CLI_WORKSPACE:}}
+    prompt: ${CLAUDE_CLI_PROMPT:Process the oldest pending agent task. Read task-*.json from the pending directory under AGENT_TASKS_DIR, run the process-pending-agent-task workflow, write result-{jobId}.json to the results directory, then delete the pending file. Summarize when done.}
+    launch-command:
+      - claude
+      - -p
+    plan-prompt: ${CLAUDE_PLAN_PROMPT:List each question on its own line ending with '?'. If you want to offer choices, list them as bullet points below the question.}
+    plan-permission-mode: ${CLAUDE_PLAN_PERMISSION_MODE:plan}
+    plan-dangerously-skip-permissions: ${CLAUDE_PLAN_DANGEROUSLY_SKIP_PERMISSIONS:false}
+    plan-include-partial-messages: ${CLAUDE_PLAN_INCLUDE_PARTIAL_MESSAGES:false}
+  telegram:
+    enabled: ${TELEGRAM_ENABLED:false}
+    token: ${TELEGRAM_BOT_TOKEN:}
+    allowed-user-ids: ${ALLOWED_TELEGRAM_USER_IDS:}
+    polling-interval-ms: 2000

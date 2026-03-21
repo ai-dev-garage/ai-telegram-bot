@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Todos — AI Dev Garage')}"></head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+  <div th:replace="~{fragments/nav :: nav}"></div>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-4">
+
+    <div class="flex items-center justify-between">
+      <h1 class="text-lg font-semibold text-gray-800">Todos</h1>
+
+      <select name="status"
+              class="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              hx-get="/ui/todos"
+              hx-target="#todo-table-container"
+              hx-swap="innerHTML"
+              hx-push-url="true"
+              hx-include="this">
+        <option value="">All statuses</option>
+        <option th:each="s : ${statuses}"
+                th:value="${s}"
+                th:text="${s}"
+                th:selected="${s == currentStatus}">
+        </option>
+      </select>
+    </div>
+
+    <!-- Add todo form -->
+    <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+      <form hx-post="/ui/todos"
+            hx-target="#todo-table-container"
+            hx-swap="innerHTML"
+            class="flex gap-3 items-end">
+        <div class="flex-1">
+          <label for="title" class="block text-xs font-medium text-gray-500 mb-1">Title</label>
+          <input type="text" name="title" id="title" required
+                 class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="What needs to be done?">
+        </div>
+        <div class="w-64">
+          <label for="workspace" class="block text-xs font-medium text-gray-500 mb-1">Workspace (optional)</label>
+          <select name="workspace" id="workspace"
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">None</option>
+            <option th:each="wp : ${workspacePaths}"
+                    th:value="${wp.path()}"
+                    th:text="${wp.label()} + ' — ' + ${wp.path()}">
+            </option>
+          </select>
+        </div>
+        <button type="submit"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          Add
+        </button>
+      </form>
+    </div>
+
+    <!-- Todo table -->
+    <div id="todo-table-container"
+         class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div th:replace="~{fragments/todo-table :: table}"></div>
+    </div>
+
+  </main>
+</body>
+</html>

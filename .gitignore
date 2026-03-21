@@ -1,0 +1,60 @@
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### IDE agent dirs (generated from .agent via scripts) ###
+.cursor/
+.claude/
+
+### Runtime logs (logback rolling files) ###
+logs/
+
+### Local environment ###
+.env
+*.env
+!config.example.env
+
+### Local Spring profile `local` (may contain DB passwords, tokens — never commit) ###
+src/main/resources/application-local.yml
+
+### Keys / keystores (if you add TLS or signing locally) ###
+*.pem
+*.p12
+*.jks
+*.pfx
+
+### Mac OS ###
+.DS_Store

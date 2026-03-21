@@ -1,0 +1,17 @@
+---
+description: Web/UI file formatting — align with project EditorConfig
+globs: **/*.{html,htm,css,scss,sass,less,js,jsx,mjs,cjs,ts,tsx,svg}
+alwaysApply: false
+---
+
+# UI / web formatting
+
+All indentation, line endings, charset, trimming, and per-type line length are defined in the repository root **[`.editorconfig`](../../.editorconfig)**. Editors that support EditorConfig apply it automatically.
+
+**Web stack in this repo (see sections “Web assets” and `*.svg` in `.editorconfig`):**
+
+- **Indent:** 2 spaces for HTML, CSS, JS/TS, and SVG (common for front-end tooling and readable nested markup).
+- **Line length:** 120 characters for those types (tighter than Java’s 160 — better for templates and side‑by‑side review).
+- **Charset / EOL:** UTF-8 and LF with a final newline (global `[*]` defaults).
+
+When generating or editing Thymeleaf, static assets, or small SVGs, match `.editorconfig` so diffs stay consistent with the rest of the UI work. For template and stack conventions, see **`ui-templates.mdc`** and **`ui-guardrails.mdc`**.

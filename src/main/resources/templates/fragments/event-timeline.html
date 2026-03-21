@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="events">
+  <div th:if="${#lists.isEmpty(events)}" class="text-gray-400 text-sm py-4">
+    No events recorded.
+  </div>
+  <ol th:unless="${#lists.isEmpty(events)}" class="relative border-l border-gray-200 ml-3 space-y-6">
+    <li th:each="e : ${events}" class="ml-6">
+      <span class="absolute -left-2 w-4 h-4 bg-blue-500 rounded-full border-2 border-white"></span>
+      <div class="flex items-baseline gap-2">
+        <span class="text-sm font-medium text-gray-800" th:text="${e.eventType()}"></span>
+        <span class="text-xs text-gray-400" th:text="${e.createdAt()}"></span>
+      </div>
+      <pre th:if="${e.hasData()}"
+           class="mt-1 text-xs text-gray-500 bg-gray-50 rounded p-2 overflow-x-auto whitespace-pre-wrap"
+           th:text="${e.dataJson()}"></pre>
+    </li>
+  </ol>
+</div>
+
+</html>

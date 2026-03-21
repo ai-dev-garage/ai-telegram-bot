@@ -1,0 +1,23 @@
+---
+description: ai-telegram-bot docs live in README.md; PlantUML under docs/diagrams.
+globs: README.md,docs/diagrams/*.puml
+---
+
+# Documentation (ai-telegram-bot)
+
+## Single source
+
+- **All user-facing documentation** lives in **`README.md`** at the repo root.
+- Use a **table of contents** at the top (links to `##` headings) for navigation.
+- When behavior, configuration, or APIs change, update **`README.md`** in the same PR.
+
+## Diagrams only under docs
+
+- **`docs/diagrams/*.puml`** — PlantUML sources; link them from the **Diagrams** section of `README.md`.
+- Do not reintroduce AsciiDoc/Markdown doc trees, Gradle doc plugins, or generate scripts unless the team explicitly opts back in.
+
+## Style
+
+- Prefer short tables and fenced `bash` / `http` blocks.
+- No secrets in examples — use placeholders; point to **`config.example.env`**.
+- Keep **module/architecture** notes brief in `README.md`; expand only when it helps operators.

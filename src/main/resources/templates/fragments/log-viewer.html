@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Single log line: shared by viewer and appended lines. -->
+<div th:fragment="log-line(logLine)"
+     th:if="${logLine != null}"
+     class="flex gap-3">
+  <span class="text-gray-500 select-none shrink-0" th:text="${logLine.createdAt()}"></span>
+  <span class="w-12 shrink-0" th:classappend="${logLine.levelClass()}" th:text="${logLine.level()}"></span>
+  <span class="whitespace-pre-wrap break-all" th:text="${logLine.line()}"></span>
+</div>
+
+<!-- Initial log block: rendered inside job detail page. HTMX polls and appends new lines. -->
+<div th:fragment="viewer(jobId, logLines, lastLogSeq)">
+  <input type="hidden" id="log-watermark"
+         name="after" th:value="${lastLogSeq}">
+
+  <div id="log-container"
+       class="bg-gray-900 text-gray-100 font-mono text-xs leading-5 rounded-lg p-4 h-96 overflow-y-auto"
+       th:hx-get="'/ui/jobs/' + ${jobId} + '/logs'"
+       hx-include="#log-watermark"
+       hx-trigger="load delay:2s, every 2s"
+       hx-target="#log-lines"
+       hx-swap="beforeend">
+
+    <div id="log-lines">
+      <div th:each="logLine : ${logLines}" th:replace="~{fragments/log-viewer :: log-line(logLine=${logLine})}"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Appended lines fragment: returned by GET /ui/jobs/{id}/logs?after=N -->
+<th:block th:fragment="lines">
+  <div th:each="logLine : ${lines}" th:replace="~{fragments/log-viewer :: log-line(logLine=${logLine})}"></div>
+</th:block>
+
+</html>

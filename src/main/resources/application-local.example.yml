@@ -1,0 +1,14 @@
+# Copy to `application-local.yml` (gitignored) when using Spring profile `local`.
+# See config.example.env: SPRING_PROFILES_ACTIVE=local
+#
+# Optional overrides — defaults already come from application.yml + env (e.g. .env).
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/ai_dev_garage_runner
+    username: runner
+    password: runner
+
+app:
+  telegram:
+    enabled: true

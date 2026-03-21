@@ -1,0 +1,17 @@
+---
+description: UI guardrails for server-rendered dashboard work
+globs: **/*.{html,htm,js,css,java}
+alwaysApply: false
+---
+
+# UI Guardrails
+
+- Do not introduce new frontend frameworks for the UI.
+- Do not use React, Angular, or Vue unless explicitly requested.
+- Do not mix SPA patterns with server-side rendering in the same feature.
+- Prefer the existing server-rendered stack: Thymeleaf, HTMX, and Tailwind.
+
+```text
+Preferred stack: Thymeleaf + HTMX + Tailwind
+Avoid: React, Angular, Vue, or hybrid SPA/server-rendered flows
+```

@@ -1,0 +1,28 @@
+---
+description: UI template rules for Thymeleaf, Tailwind, and HTMX
+globs: **/*.{html,htm,js,css,svg}
+alwaysApply: false
+---
+
+# UI Templates
+
+- Follow root **`.editorconfig`** for web file formatting (indent, line length, EOL). See **`ui-editorconfig.mdc`** for a short summary and globs.
+- Use Thymeleaf templates for UI screens and reusable server-rendered partials.
+- Use Tailwind CSS for styling; avoid inline styles except for trivial one-off values.
+- Use HTMX for dynamic updates such as partial refreshes, polling, sorting, filtering, and actions.
+- Do not put business logic, status mapping, or data shaping in templates.
+- Extract repeated markup into reusable Thymeleaf fragments instead of duplicating HTML blocks.
+- Every screen should keep a clear hierarchy with `header`, `main content`, and `actions`.
+- Tables must support filtering and sorting in the rendered UI.
+- Use consistent status colors: `SUCCESS` green, `FAILED` red, `RUNNING` blue, `QUEUED` gray.
+- Logs must be rendered in a monospaced, scrollable container.
+- Make validation and error states visible near the top of the screen instead of burying them deep in the page.
+
+```html
+<main class="space-y-4">
+  <div th:replace="~{fragments/actions :: toolbar(...)}"></div>
+  <section hx-get="/jobs" hx-target="#job-table" hx-trigger="load, every 10s">
+    <div th:replace="~{fragments/job-table :: table(${page})}"></div>
+  </section>
+</main>
+```

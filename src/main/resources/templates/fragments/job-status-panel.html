@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  Swappable panel: status badge + error banner + action buttons.
+  Replaced by HTMX on status poll, cancel, and retry responses.
+  Auto-polls every 5s while job is cancellable (QUEUED/RUNNING); stops on terminal status (server returns 286).
+-->
+<div th:fragment="panel" id="job-status-panel"
+     th:hx-get="'/ui/jobs/' + ${statusView.id()} + '/status'"
+     th:hx-trigger="${statusView.canCancel() ? 'every 5s' : 'none'}"
+     hx-target="this"
+     hx-swap="outerHTML">
+
+  <!-- Header row: status + actions -->
+  <div class="flex items-center gap-3">
+    <a href="/ui/jobs" class="text-gray-400 hover:text-gray-600">&larr;</a>
+    <h1 class="text-lg font-semibold text-gray-800">
+      Job&nbsp;<span class="font-mono" th:text="'#' + ${statusView.id()}"></span>
+    </h1>
+    <span th:replace="~{fragments/status-badge :: badge(${statusView.status()}, ${statusView.badgeClass()})}"></span>
+
+    <div class="ml-auto flex gap-2">
+      <button th:if="${statusView.canCancel()}"
+              class="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+              th:hx-post="'/ui/jobs/' + ${statusView.id()} + '/cancel'"
+              hx-target="#job-status-panel"
+              hx-swap="outerHTML"
+              hx-confirm="Cancel this job?">
+        Cancel
+      </button>
+      <button th:if="${statusView.canRetry()}"
+              class="px-3 py-1.5 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              th:hx-post="'/ui/jobs/' + ${statusView.id()} + '/retry'"
+              hx-target="#job-status-panel"
+              hx-swap="outerHTML"
+              hx-confirm="Retry this job?">
+        Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- Error banner -->
+  <div th:if="${statusView.hasError()}"
+       class="mt-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+    <span class="font-medium">Error:&nbsp;</span>
+    <span th:text="${statusView.lastError()}"></span>
+  </div>
+
+</div>
+
+</html>
