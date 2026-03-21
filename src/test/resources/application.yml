@@ -1,0 +1,18 @@
+spring:
+  profiles:
+    active: test
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  task:
+    scheduling:
+      enabled: false
+
+app:
+  telegram:
+    enabled: false
+  runner:
+    agent-runtime: cursor
+    agent-tasks-dir: ${java.io.tmpdir}/ai-telegram-bot-test/agent-tasks

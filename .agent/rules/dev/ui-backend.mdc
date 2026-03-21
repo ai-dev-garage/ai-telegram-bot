@@ -1,0 +1,25 @@
+---
+description: Backend rules for controller, DTO, and view-model UI contracts
+globs: **/*{Controller,View,Dto}.java
+alwaysApply: false
+---
+
+# UI Backend
+
+- Keep controllers thin and focused on request handling, delegation, and response assembly.
+- Do not place business logic in controllers.
+- Prepare all template-facing data in DTOs or view models before rendering.
+- Never expose entities directly to the UI layer.
+- UI endpoints should be read-optimized and return display-ready data for the specific screen or fragment.
+- Include prepared fields for sorting, filtering, status badges, error summaries, and log display when the UI needs them.
+
+```java
+public record JobRowView(
+    String id,
+    String name,
+    String statusLabel,
+    String statusBadgeClass,
+    String startedAt,
+    String detailsUrl
+) {}
+```

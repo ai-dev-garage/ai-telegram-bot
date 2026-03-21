@@ -1,0 +1,22 @@
+---
+description: Centralize Gradle plugin and explicit dependency versions in gradle.properties for ai-telegram-bot.
+globs: "**/build.gradle,**/gradle.properties,**/settings.gradle"
+alwaysApply: false
+---
+
+# Gradle (ai-telegram-bot)
+
+## Versions live in `gradle.properties`
+
+- **`nettyVersion`** — must stay aligned with the Netty release managed by the Spring Boot BOM (check `./gradlew dependencyInsight --dependency netty-resolver-dns -q`). Used only for the macOS-classifier `netty-resolver-dns-native-macos` runtime dependency.
+- **Plugin versions** (e.g. Spring Boot, Spring dependency-management) must be defined as **camelCase** properties in **`gradle.properties`** and referenced from the `plugins { }` block in `build.gradle` (e.g. `version "${springBootVersion}"`).
+- **Java toolchain** language level must use a property (e.g. `javaLanguageVersion`) — single source of truth; reference it from `java { toolchain { ... } }`.
+- **Explicit dependency versions** (overrides or libraries **not** managed by the Spring Boot BOM) must be declared in **`gradle.properties`** and referenced in `dependencies { }`. Do **not** hardcode version numbers in `build.gradle` for those coordinates.
+
+## BOM-first
+
+- Prefer **Spring Boot’s BOM**: keep `implementation` / `testImplementation` coordinates **without** a version when the BOM supplies one.
+
+## Bumping
+
+- Change versions in **`gradle.properties`** only (for the pieces this project centralizes); run `./gradlew test` after upgrades.

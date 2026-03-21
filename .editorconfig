@@ -1,0 +1,135 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# All files
+[*]
+# Use UTF-8 encoding
+charset = utf-8
+# Unix-style newlines with a newline ending every file
+end_of_line = lf
+# Insert final newline
+insert_final_newline = true
+# Remove any whitespace characters preceding newline characters
+trim_trailing_whitespace = true
+
+# Java source files
+[*.java]
+# Use 4 spaces for indentation (aligns with checkstyle)
+indent_style = space
+indent_size = 4
+# Maximum line length (aligns with checkstyle LineLength max=160)
+max_line_length = 160
+
+# Gradle build files
+[*.gradle]
+indent_style = space
+indent_size = 4
+max_line_length = 160
+
+# Groovy files (for Gradle plugins)
+[*.groovy]
+indent_style = space
+indent_size = 4
+max_line_length = 160
+
+# Gradle wrapper properties
+[gradle-wrapper.properties]
+indent_style = space
+indent_size = 4
+
+# XML files (including POM, build configs, etc.)
+[*.xml]
+indent_style = space
+indent_size = 4
+max_line_length = 160
+
+# YAML files (application configs, CI/CD, etc.)
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+max_line_length = 160
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 160
+
+# Properties files
+[*.properties]
+indent_style = space
+indent_size = 4
+max_line_length = 160
+
+# Markdown files
+[*.md]
+indent_style = space
+indent_size = 2
+max_line_length = 160
+# Don't trim trailing whitespace in markdown (two spaces = line break)
+trim_trailing_whitespace = false
+
+# SQL files
+[*.sql]
+indent_style = space
+indent_size = 4
+max_line_length = 160
+
+# Shell scripts
+[*.{sh,bash}]
+indent_style = space
+indent_size = 4
+max_line_length = 160
+
+# Batch files (Windows)
+[*.{bat,cmd}]
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+
+# Docker files
+[{Dockerfile,*.dockerfile}]
+indent_style = space
+indent_size = 4
+max_line_length = 160
+
+# Configuration files that might use tabs by convention
+[Makefile]
+indent_style = tab
+indent_size = 4
+
+# Git configuration files
+[.gitconfig]
+indent_style = tab
+indent_size = 4
+
+# IntelliJ IDEA specific files
+[*.iml]
+indent_style = space
+indent_size = 2
+
+# Web assets (Thymeleaf, Tailwind, HTMX, static JS/CSS)
+# — 2-space indent is the usual default for HTML/CSS/JS and matches common formatters.
+# — Shorter line length than Java keeps templates and scripts easier to scan in review and split panes.
+[*.{html,htm}]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+[*.{css,scss,sass,less}]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+[*.{js,jsx,mjs,cjs,ts,tsx}]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# SVG (inline icons or fragments): treat like other web markup
+[*.svg]
+indent_style = space
+indent_size = 2
+max_line_length = 120

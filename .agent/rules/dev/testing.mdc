@@ -1,0 +1,37 @@
+---
+description: JUnit 5, Mockito style, shouldWhen naming, parameterized/nested tests, and legacy-suite expectations for ai-telegram-bot.
+globs: "**/src/test/**/*.java,**/*Test.java,build.gradle,gradle.properties"
+alwaysApply: true
+---
+
+# Testing (ai-telegram-bot)
+
+## Stack
+
+- **JUnit 5** for all tests.
+- **Mockito** for doubles: `@ExtendWith(MockitoExtension.class)`, `@Mock`, `@InjectMocks` in unit tests.
+- **Spring** slice tests may use `@MockBean` and `MockMvc` (e.g. `@WebMvcTest`).
+- **Testcontainers** + Spring Boot for integration tests that need a real database (see `JobApiIntegrationTest`).
+
+## Naming
+
+- Use **camelCase** method names for **`@Test`** (and **`@ParameterizedTest`**) methods.
+- Prefer **`should<Outcome>When<Condition>`** when it reads naturally (e.g. `shouldReturnCreatedWhenBodyValid`, `shouldClassifyAsAgentTaskWhenExplicitAgentPrefix`). Alternatives like **`should<Action>When<Condition>`** are fine if clearer.
+- Lifecycle hooks: **`@BeforeEach` / `@AfterEach`** may use short names such as **`setUp`** / **`tearDown`** (not required to use `shouldWhen`).
+
+## Structure
+
+- Prefer **`@ParameterizedTest`** for tables of similar cases.
+- Prefer **`@Nested`** to group scenarios in larger test classes.
+- The current codebase may not use these yet; adopt them when they reduce duplication.
+
+## Mockito matchers
+
+- Prefer **`eq(...)`**, concrete arguments, and **`ArgumentCaptor`** to assert what collaborators received.
+- **Avoid** `any()`, `anyString()`, `nullable()`, and similar broad matchers in `when(...)` / `verify(...)` unless there is no practical alternative (e.g. enormous generated graphs). Broad matchers hide contract drift.
+- **Legacy suite:** existing tests (e.g. `JobServiceTest`, `JobControllerTest`) still use `any` / `anyMap`. Tighten matchers when you touch those tests; a full retrofit is optional.
+
+## Expectations
+
+- Non-trivial behavior changes should **add or update** tests.
+- Run **`./gradlew test`** before opening a PR.

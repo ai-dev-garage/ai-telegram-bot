@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Todo #' + ${todo.id()} + ' — AI Dev Garage')}"></head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+  <div th:replace="~{fragments/nav :: nav}"></div>
+
+  <main class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/ui/todos" class="text-gray-400 hover:text-gray-600">&larr; Back</a>
+        <h1 class="text-lg font-semibold text-gray-800" th:text="'Todo #' + ${todo.id()}"></h1>
+        <span th:replace="~{fragments/status-badge :: badge(${todo.status()}, ${todo.badgeClass()})}"></span>
+      </div>
+    </div>
+
+    <!-- Details -->
+    <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5 space-y-4">
+      <div>
+        <dt class="text-xs font-medium text-gray-400 uppercase tracking-wide">Title</dt>
+        <dd class="text-gray-800 mt-1" th:text="${todo.title()}"></dd>
+      </div>
+
+      <div th:if="${!todo.description().isEmpty()}">
+        <dt class="text-xs font-medium text-gray-400 uppercase tracking-wide">Description</dt>
+        <dd class="text-gray-800 mt-1 whitespace-pre-wrap" th:text="${todo.description()}"></dd>
+      </div>
+
+      <dl class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 text-sm">
+        <div>
+          <dt class="text-gray-400">Source</dt>
+          <dd class="text-gray-800" th:text="${todo.source()}"></dd>
+        </div>
+        <div>
+          <dt class="text-gray-400">Workspace</dt>
+          <dd class="text-gray-800" th:text="${todo.workspace()} ?: '—'"></dd>
+        </div>
+        <div>
+          <dt class="text-gray-400">Linked Job</dt>
+          <dd class="text-gray-800">
+            <a th:if="${todo.linkedJobId()}" th:href="'/ui/jobs/' + ${todo.linkedJobId()}"
+               class="text-blue-600 hover:underline" th:text="'#' + ${todo.linkedJobId()}"></a>
+            <span th:unless="${todo.linkedJobId()}">—</span>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-gray-400">Created</dt>
+          <dd class="text-gray-800" th:text="${todo.createdAt()}"></dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Actions -->
+    <section th:if="${todo.actionable()}" class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Actions</h2>
+      <div class="flex gap-3 flex-wrap">
+
+        <form th:if="${todo.open()}" th:action="'/ui/todos/' + ${todo.id()} + '/done'" method="post">
+          <button type="submit"
+                  class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
+            Mark done
+          </button>
+        </form>
+
+        <form th:action="'/ui/todos/' + ${todo.id()} + '/cancel'" method="post">
+          <button type="submit"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
+            Cancel
+          </button>
+        </form>
+
+        <!-- Work on it -->
+        <div th:if="${todo.open()}" class="flex gap-2 items-center ml-4 pl-4 border-l border-gray-200">
+          <span class="text-sm text-gray-500">Work on it:</span>
+          <select id="work-workspace"
+                  class="border border-gray-300 rounded-md px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">None</option>
+            <option th:each="wp : ${workspacePaths}"
+                    th:value="${wp.path()}"
+                    th:text="${wp.label()}"
+                    th:selected="${wp.path().equals(todo.workspace())}">
+            </option>
+          </select>
+          <form th:action="'/ui/todos/' + ${todo.id()} + '/work'" method="post"
+                onsubmit="this.querySelector('[name=workspace]').value = document.getElementById('work-workspace').value">
+            <input type="hidden" name="mode" value="agent">
+            <input type="hidden" name="workspace" value="">
+            <button type="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+              Agent
+            </button>
+          </form>
+          <form th:action="'/ui/todos/' + ${todo.id()} + '/work'" method="post"
+                onsubmit="this.querySelector('[name=workspace]').value = document.getElementById('work-workspace').value">
+            <input type="hidden" name="mode" value="plan">
+            <input type="hidden" name="workspace" value="">
+            <button type="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+              Plan
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

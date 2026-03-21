@@ -1,0 +1,20 @@
+allowlist_safe:
+  shell_command:
+    - "git status"
+    - "git log"
+    - "git log -1 --oneline"
+    - "git diff"
+    - "git branch"
+    - "pwd"
+    - "ls"
+    - "repo-sync"
+  workflow_task:
+    - "health_check"
+  agent_task: []
+
+require_approval_patterns:
+  shell_command:
+    - "sudo"
+    - "rm -rf"
+    - "git push --force"
+    - "git reset --hard"

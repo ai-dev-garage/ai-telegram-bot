@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: ai-telegram-bot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ai_dev_garage_runner
+      POSTGRES_USER: runner
+      POSTGRES_PASSWORD: runner
+    ports:
+      - "5433:5432"
+    volumes:
+      - ai_telegram_bot_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U runner -d ai_dev_garage_runner"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Named volume survives `docker compose down`; use `docker compose down -v` to wipe DB
+# (needed after editing an already-applied Flyway migration during development).
+volumes:
+  ai_telegram_bot_pg:

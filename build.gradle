@@ -1,0 +1,84 @@
+import org.springframework.boot.gradle.tasks.run.BootRun
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "${springBootVersion}"
+    id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
+}
+
+group = 'com.ai.dev.garage'
+version = '1.0.0'
+
+jar {
+    archiveBaseName = 'ai-telegram-bot'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(Integer.parseInt("${javaLanguageVersion}"))
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.springframework.integration:spring-integration-file'
+
+    // WebFlux / WebClient: on macOS, pull the correct native DNS resolver so startup does not log
+    // UnsatisfiedLinkError from DnsServerAddressStreamProviders (reactor-netty / netty-resolver-dns).
+    def osName = System.getProperty('os.name', '').toLowerCase()
+    if (osName.contains('mac')) {
+        def arch = System.getProperty('os.arch', '')
+        def nettyNativeClassifier = (arch == 'aarch64' || arch == 'arm64') ? 'osx-aarch_64' : 'osx-x86_64'
+        runtimeOnly "io.netty:netty-resolver-dns-native-macos:${nettyVersion}:${nettyNativeClassifier}"
+    }
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+def bootRunJvmXms = ((findProperty('bootRunJvmXms') ?: '1g') as String).trim()
+def bootRunJvmXmx = ((findProperty('bootRunJvmXmx') ?: '1g') as String).trim()
+
+tasks.named('bootRun', BootRun) {
+    jvmArgs = ["-Xms${bootRunJvmXms}", "-Xmx${bootRunJvmXmx}"]
+}
+
+def resolveDevAgentTarget = {
+    def p = findProperty('devAgent')
+    if (p != null && !p.toString().isBlank()) {
+        return p.toString().trim()
+    }
+    def fromEnv = System.getenv('DEV_AGENT') ?: System.getenv('AGENT_RUNTIME')
+    if (fromEnv != null && !fromEnv.isBlank()) {
+        return fromEnv.trim()
+    }
+    return 'cursor'
+}
+
+tasks.register('installDevAgentAssets', Exec) {
+    description = 'Copy .agent/rules/dev into ./.cursor or ./.claude. Target: -PdevAgent, env DEV_AGENT or AGENT_RUNTIME, default cursor.'
+    workingDir = layout.projectDirectory.asFile
+    commandLine 'bash', 'scripts/install-dev-agent-assets.sh', '--target', resolveDevAgentTarget()
+}

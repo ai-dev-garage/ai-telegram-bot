@@ -1,0 +1,40 @@
+---
+description: How to contribute to ai-telegram-bot — branches, PRs, commits, tests, and hexagonal layout.
+globs: "**/*.java,**/*.yml,**/*.yaml,**/*.gradle,**/README.md,.agent/**,CONTRIBUTING.md,config.example.env"
+alwaysApply: false
+---
+
+# Contribution (ai-telegram-bot)
+
+## Branch and PR flow
+
+- Branch from **`master`** using **`feature/<short-description>`** only (kebab-case). CI rejects other branch names (Dependabot branches are exempt).
+- Open PRs **to `master`**. Keep PRs small and focused.
+- Run **`./gradlew test`** locally before push; fix failures before requesting review.
+
+## Commits
+
+- Prefer [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
+- One logical change per commit when practical.
+
+## Code generation
+
+- **Package:** `com.ai.dev.garage.bot`
+- **Stack:** Java 21, Spring Boot 3, Lombok where the module already uses it.
+- **Hexagonal:** domain + application (ports/services) + adapters. Keep `adapter.in.*` thin; no business rules in controllers.
+- **Persistence:** respect Flyway migrations in `src/main/resources/db/migration/` — add a new versioned script for schema changes.
+- **Gradle:** plugin/toolchain/explicit dependency versions — see **gradle** rule (`gradle.mdc`).
+
+## Tests
+
+- Details: **testing** rule (`testing.mdc`) — JUnit 5, Mockito style, `should…When…` naming for new/changed tests, parameterized/nested where helpful, prefer `eq` / captors over `any*`.
+- Add or update tests for behavior changes; do not weaken coverage without reason.
+
+## Documentation and config
+
+- Operator-visible behavior or env changes require updates to **`README.md`** and, when relevant, **`config.example.env`** (see **documentation-structure** rule).
+- No secrets in examples.
+
+## PR description
+
+- State what changed and why; link issues (`Fixes #n`). Call out breaking changes and migrations.
