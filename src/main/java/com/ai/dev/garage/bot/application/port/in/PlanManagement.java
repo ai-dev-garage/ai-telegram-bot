@@ -14,7 +14,16 @@ public interface PlanManagement {
      * Creates a PLAN_TASK job and starts the first CLI round asynchronously.
      * Returns the job immediately; Telegram notifications arrive when the CLI finishes.
      */
-    Job createPlan(String intent, Requester requester, String workspace);
+    default Job createPlan(String intent, Requester requester, String workspace) {
+        return createPlan(intent, requester, workspace, null);
+    }
+
+    /**
+     * Creates a plan job with an optional Cursor CLI model override.
+     *
+     * @param cliModelOverride when non-blank, stored as payload {@code cliModel} for Cursor {@code --model}
+     */
+    Job createPlan(String intent, Requester requester, String workspace, String cliModelOverride);
 
     PlanSession getSession(long jobId);
 

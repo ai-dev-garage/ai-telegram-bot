@@ -7,6 +7,7 @@ import com.ai.dev.garage.bot.application.port.out.PlanSessionResult.ParsedMessag
 import com.ai.dev.garage.bot.application.port.out.PlanSessionResult.ParsedQuestion;
 import com.ai.dev.garage.bot.application.port.out.PlanSessionStore;
 import com.ai.dev.garage.bot.application.service.PlanSessionService.PlanCompletionListener;
+import com.ai.dev.garage.bot.application.service.TodoCompletionHook;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanSession;
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,12 +40,14 @@ class PlanResultPersistenceServiceTest {
     private JobStore jobStore;
     @Mock
     private JsonCodec jsonCodec;
+    @Mock
+    private TodoCompletionHook todoCompletionHook;
 
     private PlanResultPersistenceService service;
 
     @BeforeEach
     void setUp() {
-        service = new PlanResultPersistenceService(planSessionStore, jobStore, jsonCodec);
+        service = new PlanResultPersistenceService(planSessionStore, jobStore, jsonCodec, todoCompletionHook);
     }
 
     @Test
@@ -78,6 +82,7 @@ class PlanResultPersistenceServiceTest {
         verify(jobStore).save(job);
         verify(listener).onQuestionsReady(99L, 5L);
         verify(listener, never()).onPlanReady(anyLong());
+        verifyNoInteractions(todoCompletionHook);
     }
 
     @Test
@@ -107,6 +112,41 @@ class PlanResultPersistenceServiceTest {
         verify(planSessionStore, never()).saveQuestion(any());
         verify(listener).onPlanReady(99L);
         verify(listener, never()).onQuestionsReady(anyLong(), anyLong());
+        verifyNoInteractions(todoCompletionHook);
+    }
+
+    @Test
+    void shouldMarkJobAndSessionFailedWhenCliUnhealthy() {
+        var session = PlanSession.builder()
+            .id(5L)
+            .jobId(99L)
+            .state(PlanState.PLANNING)
+            .round(1)
+            .build();
+        var job = Job.builder().id(99L).status(JobStatus.RUNNING).build();
+        var listener = mock(PlanCompletionListener.class);
+
+        when(planSessionStore.findByJobId(99L)).thenReturn(Optional.of(session));
+        when(jobStore.findById(99L)).thenReturn(Optional.of(job));
+
+        var result = new PlanSessionResult(
+            null,
+            List.of(),
+            false,
+            "",
+            false,
+            "process exited with code 1");
+
+        service.persistCliResult(99L, result, listener);
+
+        assertThat(session.getState()).isEqualTo(PlanState.FAILED);
+        assertThat(session.getPlanText()).isEqualTo("process exited with code 1");
+        assertThat(job.getStatus()).isEqualTo(JobStatus.FAILED);
+        assertThat(job.getLastError()).isEqualTo("process exited with code 1");
+        assertThat(job.getFinishedAt()).isNotNull();
+        verify(todoCompletionHook).onJobFailed(99L);
+        verify(listener).onPlanError(99L, "process exited with code 1");
+        verify(listener, never()).onPlanReady(anyLong());
     }
 
     @Test
@@ -123,5 +163,6 @@ class PlanResultPersistenceServiceTest {
         service.persistCliResult(99L, result, null);
 
         assertThat(session.getState()).isEqualTo(PlanState.PLAN_READY);
+        verifyNoInteractions(todoCompletionHook);
     }
 }

@@ -40,7 +40,8 @@ public class AgentCommand implements TelegramCommand {
     public List<String> helpLines() {
         return List.of(
             "/agent <prompt> — agent task in current working directory",
-            "/agent @folder <prompt> — target a subfolder of cwd");
+            "/agent @folder <prompt> — target a subfolder of cwd",
+            "/agent @alias <prompt> — model alias (telegram-model-aliases), if first @token matches");
     }
 
     @Override
@@ -74,12 +75,17 @@ public class AgentCommand implements TelegramCommand {
         String workspace = resolution.get().workspace();
         String intent = "agent " + resolution.get().prompt();
 
-        JobResponse job = jobResponseMapper.toResponse(jobManagement.createJob(intent, requester, workspace));
+        String cliModel = resolution.get().cliModel();
+        JobResponse job = jobResponseMapper.toResponse(
+            jobManagement.createJob(intent, requester, workspace, cliModel));
         String agentRuntime = normalizeAgentRuntime(runnerProperties.getAgentRuntime());
         var msg = new StringBuilder();
         msg.append("Job #").append(job.getJobId()).append(" received. Classifying…");
         if (!workspace.isBlank()) {
             msg.append("\n\nWorkspace: ").append(workspace);
+        }
+        if (cliModel != null && !cliModel.isBlank()) {
+            msg.append("\nModel: ").append(cliModel);
         }
         if ("claude".equalsIgnoreCase(agentRuntime)) {
             msg.append("\n\n→ Open Claude Code and run: Process pending agent task.");
@@ -97,9 +103,11 @@ public class AgentCommand implements TelegramCommand {
             Usage
             /agent <prompt> — run in current working directory
             /agent @folder <prompt> — run in a subfolder of current cwd
+            /agent @alias <prompt> — model from app.cursor.telegram-model-aliases
 
             Example: /agent brief status of the projects
-            Example: /agent @myapp brief status""".trim();
+            Example: /agent @myapp brief status
+            /models — list Cursor CLI model ids""".trim();
     }
 
     private static String normalizeAgentRuntime(String raw) {

@@ -2,6 +2,7 @@ package com.ai.dev.garage.bot.adapter.out.claude;
 
 import com.ai.dev.garage.bot.adapter.out.cursor.CliStreamParser;
 import com.ai.dev.garage.bot.adapter.out.cursor.CliWorkspaceResolver;
+import com.ai.dev.garage.bot.adapter.out.cursor.PlanCliSessionResultMapper;
 import com.ai.dev.garage.bot.application.port.out.JobLogAppender;
 import com.ai.dev.garage.bot.application.port.out.PlanCliRuntime;
 import com.ai.dev.garage.bot.application.port.out.PlanSessionResult;
@@ -122,23 +123,18 @@ public class ClaudePlanCliAdapter implements PlanCliRuntime {
                 messages.add(new ParsedMessage(text, questions));
             }
 
-            boolean hasQuestions = messages.stream()
-                .anyMatch(m -> !m.questions().isEmpty());
-
-            return new PlanSessionResult(
-                streamResult.sessionId(),
-                messages,
-                !hasQuestions,
-                streamResult.fullText()
-            );
+            return PlanCliSessionResultMapper.fromStream(
+                job.getId(), "Claude", streamResult, exitCode, messages);
         } catch (IOException e) {
             log.error("Failed to start Claude plan CLI for job {}: {}", job.getId(), e.getMessage(), e);
             jobLogAppender.append(job.getId(), "Failed to start Claude plan CLI: " + e.getMessage());
-            return new PlanSessionResult(null, List.of(), true, "");
+            return new PlanSessionResult(
+                null, List.of(), false, "", false, "Failed to start Claude plan CLI: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Claude plan CLI interrupted for job {}", job.getId(), e);
-            return new PlanSessionResult(null, List.of(), true, "");
+            return new PlanSessionResult(
+                null, List.of(), false, "", false, "Claude plan CLI interrupted");
         }
     }
 

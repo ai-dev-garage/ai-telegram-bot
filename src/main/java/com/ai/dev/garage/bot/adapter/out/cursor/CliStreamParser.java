@@ -58,6 +58,7 @@ public class CliStreamParser {
                     String type = textOrNull(event, "type");
                     dispatchByType(type, event, state);
                 } catch (Exception e) {
+                    state.appendUnparseableLine(line);
                     log.debug("Skipping unparseable stream-json line: {}", line, e);
                 }
                 line = reader.readLine();
@@ -72,8 +73,10 @@ public class CliStreamParser {
             state.getSessionId(),
             state.getAssistantMessages(),
             state.getFullText().toString(),
+            state.isResultLineSeen(),
             state.isSuccess(),
-            state.getDurationMs());
+            state.getDurationMs(),
+            state.getUnparseablePreview());
     }
 
     private static void captureSessionIdFromEvent(JsonNode event, CliStreamParseState state) {
@@ -111,6 +114,7 @@ public class CliStreamParser {
 
     private static void applyResult(JsonNode event, CliStreamParseState state) {
         flushStreamDeltaBuffer(state.getStreamDeltaBuffer(), state.getAssistantMessages());
+        state.setResultLineSeen(true);
         state.setSuccess(!Objects.equals(textOrNull(event, "subtype"), "error"));
         if (event.has("duration_ms")) {
             state.setDurationMs(event.get("duration_ms").asLong());
@@ -191,8 +195,10 @@ public class CliStreamParser {
         String sessionId,
         List<String> assistantMessages,
         String fullText,
+        boolean resultLineSeen,
         boolean success,
-        long durationMs
+        long durationMs,
+        String unparseablePreview
     ) {
     }
 }

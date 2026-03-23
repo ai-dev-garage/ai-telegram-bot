@@ -7,5 +7,7 @@ public enum PlanState {
     PAUSED,
     APPROVED,
     REJECTED,
-    CANCELLED
+    CANCELLED,
+    /** Plan CLI exited with an error or produced no usable output. */
+    FAILED
 }

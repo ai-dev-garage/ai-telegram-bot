@@ -38,7 +38,8 @@ CREATE TYPE plan_state AS ENUM (
     'PAUSED',
     'APPROVED',
     'REJECTED',
-    'CANCELLED'
+    'CANCELLED',
+    'FAILED'
     );
 
 CREATE TYPE todo_status AS ENUM (
