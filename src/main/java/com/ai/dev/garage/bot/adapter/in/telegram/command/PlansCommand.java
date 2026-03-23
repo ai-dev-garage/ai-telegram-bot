@@ -6,12 +6,16 @@ import com.ai.dev.garage.bot.application.port.in.PlanManagement;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.PlanState;
 
-import java.util.ArrayList;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Order(31)
@@ -34,9 +38,11 @@ public class PlansCommand implements TelegramCommand {
 
     @Override
     public boolean canHandle(String text) {
-        if (text == null) return false;
-        String t = text.trim().toLowerCase();
-        return t.equals("/plans");
+        if (text == null) {
+            return false;
+        }
+        String t = text.trim().toLowerCase(Locale.ROOT);
+        return Objects.equals(t, "/plans");
     }
 
     @Override
@@ -48,7 +54,7 @@ public class PlansCommand implements TelegramCommand {
         }
 
         List<String> infoLines = new ArrayList<>();
-        InlineKeyboardBuilder kb = InlineKeyboardBuilder.create();
+        var kb = InlineKeyboardBuilder.create();
         boolean hasButtons = false;
 
         for (PlanSession s : active) {
@@ -61,7 +67,7 @@ public class PlansCommand implements TelegramCommand {
             }
         }
 
-        StringBuilder msg = new StringBuilder("Active plans:");
+        var msg = new StringBuilder("Active plans:");
         if (!infoLines.isEmpty()) {
             msg.append("\n\n");
             for (String line : infoLines) {
@@ -81,7 +87,7 @@ public class PlansCommand implements TelegramCommand {
             case PLANNING -> "analyzing...";
             case AWAITING_INPUT -> "awaiting your input";
             case PLAN_READY -> "plan ready";
-            default -> s.getState().name().toLowerCase();
+            default -> s.getState().name().toLowerCase(Locale.ROOT);
         };
     }
 }

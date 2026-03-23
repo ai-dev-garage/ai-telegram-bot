@@ -1,14 +1,5 @@
 package com.ai.dev.garage.bot.adapter.in.rest;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.ai.dev.garage.bot.adapter.in.rest.dto.CreateJobRequest;
 import com.ai.dev.garage.bot.adapter.in.rest.dto.JobResponse;
 import com.ai.dev.garage.bot.application.port.in.JobLogQueries;
@@ -19,9 +10,7 @@ import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.RiskLevel;
 import com.ai.dev.garage.bot.domain.TaskType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -31,6 +20,21 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = JobController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -55,7 +59,7 @@ class JobControllerTest {
 
     @Test
     void shouldReturnOkWhenListJobs() throws Exception {
-        Job job = Job.builder()
+        var job = Job.builder()
             .id(1L)
             .intent("x")
             .taskType(TaskType.SHELL_COMMAND)
@@ -91,7 +95,7 @@ class JobControllerTest {
 
     @Test
     void shouldReturnCreatedWhenCreateJobValid() throws Exception {
-        CreateJobRequest req = CreateJobRequest.builder()
+        var req = CreateJobRequest.builder()
             .intent("git status")
             .requester(CreateJobRequest.Requester.builder()
                 .telegramUserId(1L)
@@ -99,7 +103,7 @@ class JobControllerTest {
                 .build())
             .build();
 
-        Job created = Job.builder()
+        var created = Job.builder()
             .id(5L)
             .intent("git status")
             .taskType(TaskType.SHELL_COMMAND)

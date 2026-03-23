@@ -1,12 +1,16 @@
 package com.ai.dev.garage.bot.application.support;
 
 import com.ai.dev.garage.bot.config.RunnerProperties;
+
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 /**
  * Ensures a working directory is under configured allowlisted roots (canonical paths).
@@ -18,6 +22,8 @@ public class AllowedPathValidator {
     private final RunnerProperties runnerProperties;
 
     /**
+     * Returns whether {@code cwd} lies under configured allowlisted roots, or is unset (always allowed).
+     *
      * @param cwd nullable; null/blank means process default directory (always allowed)
      * @return true if cwd is allowed or unset
      */
@@ -80,7 +86,7 @@ public class AllowedPathValidator {
         if (path.startsWith("~/")) {
             return System.getProperty("user.home") + path.substring(1);
         }
-        if ("~".equals(path)) {
+        if (Objects.equals(path, "~")) {
             return System.getProperty("user.home");
         }
         return path;

@@ -4,7 +4,8 @@ import java.util.List;
 
 public interface TelegramCommand {
 
-    record BotCommandInfo(String command, String menuDescription) {}
+    record BotCommandInfo(String command, String menuDescription) {
+    }
 
     boolean canHandle(String text);
 

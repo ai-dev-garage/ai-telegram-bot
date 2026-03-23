@@ -13,4 +13,5 @@ public record TodoSummaryView(
     String updatedAt,
     boolean open,
     boolean actionable
-) {}
+) {
+}

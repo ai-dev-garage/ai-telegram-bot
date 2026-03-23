@@ -56,5 +56,8 @@ src/main/resources/application-local.yml
 *.jks
 *.pfx
 
+### Stray artifacts (never commit Checkstyle/JAR classes under repo root) ###
+/com/puppycrawl/
+
 ### Mac OS ###
 .DS_Store

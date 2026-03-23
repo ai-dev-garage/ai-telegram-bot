@@ -2,12 +2,16 @@ package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
 import com.ai.dev.garage.bot.adapter.in.telegram.NavigationStateStore;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
-import java.util.List;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Order(15)
@@ -30,10 +34,7 @@ public class PwdCommand implements TelegramCommand {
 
     @Override
     public boolean canHandle(String text) {
-        if (text == null) {
-            return false;
-        }
-        return text.trim().equals("/pwd");
+        return text != null && Objects.equals(text.trim(), "/pwd");
     }
 
     @Override

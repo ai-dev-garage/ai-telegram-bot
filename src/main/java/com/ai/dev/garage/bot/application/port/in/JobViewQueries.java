@@ -4,6 +4,7 @@ import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobEvent;
 import com.ai.dev.garage.bot.domain.JobLog;
 import com.ai.dev.garage.bot.domain.JobStatus;
+
 import java.util.List;
 
 public interface JobViewQueries {

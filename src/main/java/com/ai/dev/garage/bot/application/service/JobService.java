@@ -5,23 +5,29 @@ import com.ai.dev.garage.bot.application.port.in.support.IntentClassification;
 import com.ai.dev.garage.bot.application.port.in.support.JobLifecycle;
 import com.ai.dev.garage.bot.application.port.out.JobStore;
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
+import com.ai.dev.garage.bot.application.service.model.JobResultPayload;
+import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
 import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.ClassificationResult;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.TaskType;
-import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import jakarta.persistence.EntityNotFoundException;
+
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -55,7 +61,7 @@ public class JobService implements JobManagement {
             payload.put("workspace", ws);
         }
         String storedIntent = storedIntent(intent, classified);
-        Job entity = Job.builder()
+        var entity = Job.builder()
             .intent(storedIntent)
             .requester(copyRequester(requester))
             .taskType(classified.taskType())
@@ -137,7 +143,7 @@ public class JobService implements JobManagement {
             throw new IllegalStateException("job already terminal");
         }
         job.setStatus(JobStatus.CANCELLED);
-        job.setFinishedAt(OffsetDateTime.now());
+        job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         Job saved = jobRepository.save(job);
         todoCompletionHook.onJobCancelled(saved.getId());
         return saved;
@@ -147,7 +153,7 @@ public class JobService implements JobManagement {
     public Optional<Job> pollQueuedJob() {
         return jobRepository.findNextRunnableJob().map(job -> {
             job.setStatus(JobStatus.RUNNING);
-            job.setStartedAt(OffsetDateTime.now());
+            job.setStartedAt(OffsetDateTime.now(ZoneId.systemDefault()));
             return jobRepository.save(job);
         });
     }
@@ -156,7 +162,7 @@ public class JobService implements JobManagement {
     public void markCompleted(Job job, String summary, int exitCode) {
         job.setStatus(JobStatus.SUCCESS);
         job.setResultJson(jsonCodec.toJson(JobResultPayload.result(summary, exitCode, null)));
-        job.setFinishedAt(OffsetDateTime.now());
+        job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         jobRepository.save(job);
         todoCompletionHook.onJobCompleted(job.getId());
     }
@@ -166,7 +172,7 @@ public class JobService implements JobManagement {
         job.setStatus(JobStatus.FAILED);
         job.setResultJson(jsonCodec.toJson(JobResultPayload.result(summary, exitCode, error)));
         job.setLastError(error);
-        job.setFinishedAt(OffsetDateTime.now());
+        job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         jobRepository.save(job);
         todoCompletionHook.onJobFailed(job.getId());
     }

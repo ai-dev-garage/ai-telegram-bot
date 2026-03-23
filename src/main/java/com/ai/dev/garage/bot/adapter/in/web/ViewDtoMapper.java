@@ -15,38 +15,48 @@ import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.PlanState;
+
+import org.springframework.stereotype.Component;
+
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
+
+/**
+ * Maps domain aggregates to Thymeleaf view DTOs.
+ *
+ * <p>PMD {@code CouplingBetweenObjects}: one mapper touches many entity and view types by design.
+ */
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 @Component
 @RequiredArgsConstructor
 public class ViewDtoMapper {
 
-    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private static final DateTimeFormatter TIME_ONLY = DateTimeFormatter.ofPattern("HH:mm:ss");
-    private static final DateTimeFormatter DATE_TIME_SEC = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.ROOT);
+    private static final DateTimeFormatter TIME_ONLY = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.ROOT);
+    private static final DateTimeFormatter DATE_TIME_SEC = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.ROOT);
     private static final int INTENT_MAX_LENGTH = 80;
 
     private static final Map<JobStatus, String> STATUS_BADGE = Map.of(
-        JobStatus.SUCCESS,        "bg-green-500 text-white",
-        JobStatus.FAILED,         "bg-red-500 text-white",
-        JobStatus.RUNNING,        "bg-blue-500 text-white",
-        JobStatus.QUEUED,         "bg-gray-400 text-white",
-        JobStatus.CANCELLED,      "bg-gray-600 text-white",
+        JobStatus.SUCCESS, "bg-green-500 text-white",
+        JobStatus.FAILED, "bg-red-500 text-white",
+        JobStatus.RUNNING, "bg-blue-500 text-white",
+        JobStatus.QUEUED, "bg-gray-400 text-white",
+        JobStatus.CANCELLED, "bg-gray-600 text-white",
         JobStatus.AWAITING_INPUT, "bg-yellow-500 text-white",
-        JobStatus.PAUSED,         "bg-orange-500 text-white"
+        JobStatus.PAUSED, "bg-orange-500 text-white"
     );
 
     private static final Map<String, String> LEVEL_CLASS = Map.of(
         "ERROR", "text-red-600",
-        "WARN",  "text-yellow-600",
-        "INFO",  "text-gray-700",
+        "WARN", "text-yellow-600",
+        "INFO", "text-gray-700",
         "DEBUG", "text-gray-400"
     );
 
@@ -54,13 +64,13 @@ public class ViewDtoMapper {
     private static final Set<JobStatus> CANCELLABLE = Set.of(JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.AWAITING_INPUT, JobStatus.PAUSED);
 
     private static final Map<PlanState, String> PLAN_STATE_BADGE = Map.of(
-        PlanState.PLANNING,        "bg-blue-500 text-white",
-        PlanState.AWAITING_INPUT,  "bg-yellow-500 text-white",
-        PlanState.PLAN_READY,      "bg-green-500 text-white",
-        PlanState.PAUSED,          "bg-orange-500 text-white",
-        PlanState.APPROVED,        "bg-emerald-600 text-white",
-        PlanState.REJECTED,        "bg-red-500 text-white",
-        PlanState.CANCELLED,       "bg-gray-600 text-white"
+        PlanState.PLANNING, "bg-blue-500 text-white",
+        PlanState.AWAITING_INPUT, "bg-yellow-500 text-white",
+        PlanState.PLAN_READY, "bg-green-500 text-white",
+        PlanState.PAUSED, "bg-orange-500 text-white",
+        PlanState.APPROVED, "bg-emerald-600 text-white",
+        PlanState.REJECTED, "bg-red-500 text-white",
+        PlanState.CANCELLED, "bg-gray-600 text-white"
     );
 
     private final JsonCodec jsonCodec;
@@ -72,7 +82,7 @@ public class ViewDtoMapper {
             job.getStatus().name(),
             badgeClass(job.getStatus()),
             error,
-            !"—".equals(error),
+            !Objects.equals(error, "—"),
             job.getStatus() == JobStatus.FAILED,
             CANCELLABLE.contains(job.getStatus()));
     }
@@ -120,7 +130,7 @@ public class ViewDtoMapper {
                                       PlanSession planSession, List<PlanQuestion> planQuestions) {
         List<JobEventView> eventViews = events.stream().map(this::toEventView).toList();
         List<JobLog> safeLogs = logs.stream().filter(Objects::nonNull).toList();
-        List<JobLogLineView> logViews = safeLogs.stream().map(this::toLogLine).toList();
+        List<JobLogLineView> logViews = safeLogs.stream().map(ViewDtoMapper::toLogLine).toList();
         int lastSeq = safeLogs.isEmpty() ? 0 : safeLogs.getLast().getSeq();
 
         boolean isPlanTask = planSession != null;
@@ -168,7 +178,7 @@ public class ViewDtoMapper {
     }
 
     public List<JobLogLineView> toLogLines(List<JobLog> logs) {
-        return logs.stream().filter(Objects::nonNull).map(this::toLogLine).toList();
+        return logs.stream().filter(Objects::nonNull).map(ViewDtoMapper::toLogLine).toList();
     }
 
     public List<JobEventView> toEventViews(List<JobEvent> events) {
@@ -184,7 +194,7 @@ public class ViewDtoMapper {
             hasData);
     }
 
-    private JobLogLineView toLogLine(JobLog log) {
+    private static JobLogLineView toLogLine(JobLog log) {
         return new JobLogLineView(
             log.getSeq(),
             log.getLevel(),
@@ -207,7 +217,9 @@ public class ViewDtoMapper {
     }
 
     private static String truncate(String text) {
-        if (text == null) return "";
+        if (text == null) {
+            return "";
+        }
         return text.length() <= INTENT_MAX_LENGTH ? text : text.substring(0, INTENT_MAX_LENGTH) + "…";
     }
 

@@ -6,6 +6,7 @@ import java.util.Map;
  * Port for loading approval/classification policy (YAML). Keeps {@link com.ai.dev.garage.bot.application.service.support.ClassificationService}
  * independent of filesystem / classpath details (DIP).
  */
+@FunctionalInterface
 public interface PolicyProvider {
 
     Map<String, Object> loadPolicy();

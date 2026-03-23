@@ -2,16 +2,20 @@ package com.ai.dev.garage.bot.adapter.in.web;
 
 import com.ai.dev.garage.bot.adapter.in.web.dto.DashboardView;
 import com.ai.dev.garage.bot.application.port.in.DashboardQueries;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
 @RequestMapping("/ui")
 @RequiredArgsConstructor
 public class DashboardController {
+
+    private static final int RECENT_FAILURES_LIMIT = 10;
 
     private final DashboardQueries dashboardQueries;
     private final ViewDtoMapper mapper;
@@ -20,7 +24,7 @@ public class DashboardController {
     public String dashboard(Model model) {
         DashboardView view = mapper.toDashboardView(
             dashboardQueries.countsByStatus(),
-            dashboardQueries.recentFailures(10));
+            dashboardQueries.recentFailures(RECENT_FAILURES_LIMIT));
         model.addAttribute("dashboard", view);
         model.addAttribute("counts", view.counts());
         model.addAttribute("jobs", view.recentFailures());
@@ -35,7 +39,7 @@ public class DashboardController {
 
     @GetMapping("/dashboard/failures")
     public String failures(Model model) {
-        model.addAttribute("jobs", mapper.toSummaryList(dashboardQueries.recentFailures(10)));
+        model.addAttribute("jobs", mapper.toSummaryList(dashboardQueries.recentFailures(RECENT_FAILURES_LIMIT)));
         return "fragments/job-table :: table";
     }
 }

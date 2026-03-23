@@ -1,15 +1,5 @@
 package com.ai.dev.garage.bot.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import org.mockito.ArgumentCaptor;
-
 import com.ai.dev.garage.bot.application.port.in.support.IntentClassification;
 import com.ai.dev.garage.bot.application.port.in.support.JobLifecycle;
 import com.ai.dev.garage.bot.application.port.out.JobStore;
@@ -22,13 +12,24 @@ import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.RiskLevel;
 import com.ai.dev.garage.bot.domain.TaskType;
-import java.util.HashMap;
-import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JobServiceTest {
@@ -53,8 +54,8 @@ class JobServiceTest {
 
     @Test
     void shouldPersistAndFinalizeWhenCreateJob() {
-        Requester requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
-        ClassificationResult classified = new ClassificationResult(
+        var requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
+        var classified = new ClassificationResult(
             TaskType.SHELL_COMMAND,
             Map.of("command", "git status"),
             RiskLevel.LOW,
@@ -70,7 +71,7 @@ class JobServiceTest {
         });
         when(jobLifecycle.finalizeNewJob(any(Job.class), eq(classified))).thenReturn(new JobLifecycle.FinalizeOutcome(null));
 
-        Job result = jobService.createJob("  git status  ", requester, null);
+        var result = jobService.createJob("  git status  ", requester, null);
 
         assertThat(result.getId()).isEqualTo(10L);
         assertThat(result.getStatus()).isEqualTo(JobStatus.QUEUED);
@@ -80,8 +81,8 @@ class JobServiceTest {
 
     @Test
     void shouldStoreClassificationInputAsIntentWhenAgentTask() {
-        Requester requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
-        ClassificationResult classified = new ClassificationResult(
+        var requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
+        var classified = new ClassificationResult(
             TaskType.AGENT_TASK,
             Map.of(
                 "agent_or_command", "agent",
@@ -99,7 +100,7 @@ class JobServiceTest {
         });
         when(jobLifecycle.finalizeNewJob(any(Job.class), eq(classified))).thenReturn(new JobLifecycle.FinalizeOutcome(null));
 
-        Job result = jobService.createJob("agent brief status of the projects", requester, null);
+        var result = jobService.createJob("agent brief status of the projects", requester, null);
 
         assertThat(result.getIntent()).isEqualTo("brief status of the projects");
         assertThat(result.getTaskType()).isEqualTo(TaskType.AGENT_TASK);
@@ -107,11 +108,11 @@ class JobServiceTest {
 
     @Test
     void shouldMergePreferredShellCwdWhenShellCommand() {
-        Requester requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
+        var requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
         Map<String, Object> shellPayload = new HashMap<>();
         shellPayload.put("command", "ls");
         shellPayload.put("cwd", null);
-        ClassificationResult classified = new ClassificationResult(
+        var classified = new ClassificationResult(
             TaskType.SHELL_COMMAND,
             shellPayload,
             RiskLevel.LOW,
@@ -125,7 +126,7 @@ class JobServiceTest {
         });
         when(jobLifecycle.finalizeNewJob(any(Job.class), eq(classified))).thenReturn(new JobLifecycle.FinalizeOutcome(null));
 
-        ArgumentCaptor<java.util.Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(java.util.Map.class);
+        ArgumentCaptor<Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
         when(jsonCodec.toJson(payloadCaptor.capture())).thenReturn("{}");
 
         jobService.createJob("ls", requester, "/allowed/path");
@@ -135,8 +136,8 @@ class JobServiceTest {
 
     @Test
     void shouldPutWorkspaceInPayloadWhenAgentTaskAndPreferredPathAllowed() {
-        Requester requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
-        ClassificationResult classified = new ClassificationResult(
+        var requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
+        var classified = new ClassificationResult(
             TaskType.AGENT_TASK,
             Map.of(
                 "agent_or_command", "agent",
@@ -154,7 +155,7 @@ class JobServiceTest {
         });
         when(jobLifecycle.finalizeNewJob(any(Job.class), eq(classified))).thenReturn(new JobLifecycle.FinalizeOutcome(null));
 
-        ArgumentCaptor<java.util.Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(java.util.Map.class);
+        ArgumentCaptor<Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
         when(jsonCodec.toJson(payloadCaptor.capture())).thenReturn("{}");
 
         jobService.createJob("agent do something", requester, "/projects/app");
@@ -164,8 +165,8 @@ class JobServiceTest {
 
     @Test
     void shouldThrowWhenAgentTaskWorkspaceNotAllowlisted() {
-        Requester requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
-        ClassificationResult classified = new ClassificationResult(
+        var requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
+        var classified = new ClassificationResult(
             TaskType.AGENT_TASK,
             Map.of("agent_or_command", "agent", "input", "x", "context", Map.of()),
             RiskLevel.MEDIUM,

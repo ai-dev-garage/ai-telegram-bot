@@ -1,5 +1,7 @@
 package com.ai.dev.garage.bot.adapter.in.telegram;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,11 +19,15 @@ public final class InlineKeyboardBuilder {
     private InlineKeyboardBuilder() {
     }
 
+    @CanIgnoreReturnValue
     public static InlineKeyboardBuilder create() {
         return new InlineKeyboardBuilder();
     }
 
-    /** Add a single-button row. */
+    /**
+     * Add a single-button row.
+     */
+    @CanIgnoreReturnValue
     public InlineKeyboardBuilder row(String label, String callbackData) {
         Map<String, String> btn = new LinkedHashMap<>();
         btn.put("text", label);
@@ -30,7 +36,10 @@ public final class InlineKeyboardBuilder {
         return this;
     }
 
-    /** Add a row with multiple buttons side-by-side. */
+    /**
+     * Add a row with multiple buttons side-by-side.
+     */
+    @CanIgnoreReturnValue
     public InlineKeyboardBuilder row(List<Button> buttons) {
         List<Map<String, String>> row = new ArrayList<>();
         for (Button b : buttons) {

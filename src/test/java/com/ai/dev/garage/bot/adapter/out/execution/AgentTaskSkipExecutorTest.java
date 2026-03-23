@@ -1,12 +1,10 @@
 package com.ai.dev.garage.bot.adapter.out.execution;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.ai.dev.garage.bot.application.execution.TaskExecutionContext;
-import com.ai.dev.garage.bot.application.execution.TaskExecutionResult;
+import com.ai.dev.garage.bot.application.execution.model.TaskExecutionContext;
 import com.ai.dev.garage.bot.application.port.out.JobLogAppender;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.TaskType;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,6 +12,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class AgentTaskSkipExecutorTest {
@@ -36,10 +36,10 @@ class AgentTaskSkipExecutorTest {
 
     @Test
     void shouldReturnFailureWhenExecuteInvoked() {
-        Job job = Job.builder().id(7L).build();
-        TaskExecutionContext ctx = new TaskExecutionContext(7L, logAppender);
+        var job = Job.builder().id(7L).build();
+        var ctx = new TaskExecutionContext(7L, logAppender);
 
-        TaskExecutionResult result = executor.execute(job, ctx);
+        var result = executor.execute(job, ctx);
 
         assertThat(result.success()).isFalse();
         assertThat(result.exitCode()).isEqualTo(-1);

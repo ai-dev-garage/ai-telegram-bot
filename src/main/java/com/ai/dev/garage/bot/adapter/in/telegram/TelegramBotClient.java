@@ -1,14 +1,17 @@
 package com.ai.dev.garage.bot.adapter.in.telegram;
 
 import com.ai.dev.garage.bot.config.TelegramProperties;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import reactor.core.publisher.Mono;
 
 /**
@@ -18,7 +21,7 @@ import reactor.core.publisher.Mono;
 @ConditionalOnProperty(prefix = "app.telegram", name = "enabled", havingValue = "true")
 public class TelegramBotClient {
 
-    private static final Logger log = LoggerFactory.getLogger(TelegramBotClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TelegramBotClient.class);
 
     private final WebClient webClient;
 
@@ -31,7 +34,11 @@ public class TelegramBotClient {
             .build();
     }
 
-    @SuppressWarnings("unchecked")
+    private static boolean isJsonBooleanTrue(Object value) {
+        return value instanceof Boolean b && b;
+    }
+
+    @SuppressWarnings("unchecked") // WebClient bodyToMono(Map.class); Telegram JSON is loosely typed maps
     public Map<String, Object> getUpdates(long offset, int timeoutSeconds) {
         Map<String, Object> response = webClient.get()
             .uri(uriBuilder -> uriBuilder.path("/getUpdates")
@@ -40,8 +47,8 @@ public class TelegramBotClient {
                 .build())
             .retrieve()
             .bodyToMono(Map.class)
-            .doOnNext(body -> log.debug("Telegram getUpdates ok={}", body != null ? body.get("ok") : null))
-            .doOnError(ex -> log.warn("Telegram getUpdates failed: {}", ex.getMessage()))
+            .doOnNext(body -> LOG.debug("Telegram getUpdates ok={}", body != null ? body.get("ok") : null))
+            .doOnError(ex -> LOG.warn("Telegram getUpdates failed: {}", ex.getMessage()))
             .onErrorResume(ex -> Mono.empty())
             .block();
         return response == null ? Map.of() : response;
@@ -51,7 +58,7 @@ public class TelegramBotClient {
      * Plain text (no parse_mode). Use for any message that includes job text, paths, logs, or model output —
      * Telegram's legacy Markdown rejects many characters and returns HTTP 400.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // bodyToMono(Map.class) for Telegram JSON response
     public void sendPlain(Long chatId, String text) {
         webClient.post()
             .uri("/sendMessage")
@@ -59,19 +66,20 @@ public class TelegramBotClient {
             .retrieve()
             .bodyToMono(Map.class)
             .doOnNext(body -> {
-                boolean ok = body != null && Boolean.TRUE.equals(body.get("ok"));
+                Object okField = body != null ? body.get("ok") : null;
+                boolean ok = isJsonBooleanTrue(okField);
                 if (!ok) {
-                    log.warn("Telegram sendMessage (plain) chatId={} ok=false body={}", chatId, body);
+                    LOG.warn("Telegram sendMessage (plain) chatId={} ok=false body={}", chatId, body);
                 } else {
-                    log.debug("Telegram sendMessage (plain) chatId={} ok=true", chatId);
+                    LOG.debug("Telegram sendMessage (plain) chatId={} ok=true", chatId);
                 }
             })
-            .doOnError(ex -> log.warn("Telegram sendMessage (plain) failed chatId={}: {}", chatId, ex.getMessage()))
+            .doOnError(ex -> LOG.warn("Telegram sendMessage (plain) failed chatId={}: {}", chatId, ex.getMessage()))
             .onErrorResume(ex -> Mono.empty())
             .block();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // bodyToMono(Map.class) for Telegram JSON response
     public void sendMarkdown(Long chatId, String text) {
         webClient.post()
             .uri("/sendMessage")
@@ -79,14 +87,15 @@ public class TelegramBotClient {
             .retrieve()
             .bodyToMono(Map.class)
             .doOnNext(body -> {
-                boolean ok = body != null && Boolean.TRUE.equals(body.get("ok"));
+                Object okField = body != null ? body.get("ok") : null;
+                boolean ok = isJsonBooleanTrue(okField);
                 if (!ok) {
-                    log.warn("Telegram sendMessage (Markdown) chatId={} ok=false body={}", chatId, body);
+                    LOG.warn("Telegram sendMessage (Markdown) chatId={} ok=false body={}", chatId, body);
                 } else {
-                    log.debug("Telegram sendMessage (Markdown) chatId={} ok=true", chatId);
+                    LOG.debug("Telegram sendMessage (Markdown) chatId={} ok=true", chatId);
                 }
             })
-            .doOnError(ex -> log.warn("Telegram sendMessage (Markdown) failed chatId={}: {}", chatId, ex.getMessage()))
+            .doOnError(ex -> LOG.warn("Telegram sendMessage (Markdown) failed chatId={}: {}", chatId, ex.getMessage()))
             .onErrorResume(ex -> Mono.empty())
             .block();
     }
@@ -94,7 +103,7 @@ public class TelegramBotClient {
     /**
      * Plain text + inline keyboard (avoid Markdown clashes with path characters).
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // bodyToMono(Map.class) for Telegram JSON response
     public void sendWithInlineKeyboard(Long chatId, String text, List<List<Map<String, String>>> inlineKeyboard) {
         Map<String, Object> replyMarkup = new LinkedHashMap<>();
         replyMarkup.put("inline_keyboard", inlineKeyboard);
@@ -108,19 +117,20 @@ public class TelegramBotClient {
             .retrieve()
             .bodyToMono(Map.class)
             .doOnNext(res -> {
-                boolean ok = res != null && Boolean.TRUE.equals(res.get("ok"));
+                Object okField = res != null ? res.get("ok") : null;
+                boolean ok = isJsonBooleanTrue(okField);
                 if (!ok) {
-                    log.warn("Telegram sendMessage (keyboard) chatId={} ok=false body={}", chatId, res);
+                    LOG.warn("Telegram sendMessage (keyboard) chatId={} ok=false body={}", chatId, res);
                 } else {
-                    log.debug("Telegram sendMessage (keyboard) chatId={} ok=true", chatId);
+                    LOG.debug("Telegram sendMessage (keyboard) chatId={} ok=true", chatId);
                 }
             })
-            .doOnError(ex -> log.warn("Telegram sendMessage (keyboard) failed chatId={}: {}", chatId, ex.getMessage()))
+            .doOnError(ex -> LOG.warn("Telegram sendMessage (keyboard) failed chatId={}: {}", chatId, ex.getMessage()))
             .onErrorResume(ex -> Mono.empty())
             .block();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // bodyToMono(Map.class) for Telegram JSON response
     public void answerCallbackQuery(String callbackQueryId, String optionalUserVisibleText) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("callback_query_id", callbackQueryId);
@@ -133,8 +143,8 @@ public class TelegramBotClient {
             .bodyValue(body)
             .retrieve()
             .bodyToMono(Map.class)
-            .doOnNext(res -> log.debug("Telegram answerCallbackQuery ok={}", res != null ? res.get("ok") : null))
-            .doOnError(ex -> log.warn("Telegram answerCallbackQuery failed: {}", ex.getMessage()))
+            .doOnNext(res -> LOG.debug("Telegram answerCallbackQuery ok={}", res != null ? res.get("ok") : null))
+            .doOnError(ex -> LOG.warn("Telegram answerCallbackQuery failed: {}", ex.getMessage()))
             .onErrorResume(ex -> Mono.empty())
             .block();
     }
@@ -142,7 +152,7 @@ public class TelegramBotClient {
     /**
      * Register bot commands via Telegram setMyCommands API for the command menu.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // bodyToMono(Map.class) for Telegram JSON response
     public void setMyCommands(List<Map<String, String>> commands) {
         webClient.post()
             .uri("/setMyCommands")
@@ -150,21 +160,22 @@ public class TelegramBotClient {
             .retrieve()
             .bodyToMono(Map.class)
             .doOnNext(res -> {
-                boolean ok = res != null && Boolean.TRUE.equals(res.get("ok"));
+                Object okField = res != null ? res.get("ok") : null;
+                boolean ok = isJsonBooleanTrue(okField);
                 if (!ok) {
-                    log.warn("Telegram setMyCommands ok=false body={}", res);
+                    LOG.warn("Telegram setMyCommands ok=false body={}", res);
                 } else {
-                    log.info("Telegram setMyCommands registered {} commands", commands.size());
+                    LOG.info("Telegram setMyCommands registered {} commands", commands.size());
                 }
             })
-            .doOnError(ex -> log.warn("Telegram setMyCommands failed: {}", ex.getMessage()))
+            .doOnError(ex -> LOG.warn("Telegram setMyCommands failed: {}", ex.getMessage()))
             .onErrorResume(ex -> Mono.empty())
             .block();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // Telegram "result" is a JSON array of heterogeneous maps
     public static List<Map<String, Object>> extractUpdates(Map<String, Object> response) {
-        if (response == null || !Boolean.TRUE.equals(response.get("ok"))) {
+        if (response == null || !isJsonBooleanTrue(response.get("ok"))) {
             return List.of();
         }
         Object result = response.get("result");

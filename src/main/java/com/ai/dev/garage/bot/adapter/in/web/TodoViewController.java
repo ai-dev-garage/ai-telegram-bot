@@ -5,11 +5,20 @@ import com.ai.dev.garage.bot.application.port.in.TodoManagement;
 import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.TodoSource;
 import com.ai.dev.garage.bot.domain.TodoStatus;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+import java.util.Objects;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/ui/todos")
@@ -24,11 +33,11 @@ public class TodoViewController {
 
     @GetMapping
     public String list(
-            @RequestParam(required = false) TodoStatus status,
-            @RequestParam(defaultValue = "createdAt") String sort,
-            @RequestParam(defaultValue = "desc") String dir,
-            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-            Model model) {
+        @RequestParam(required = false) TodoStatus status,
+        @RequestParam(defaultValue = "createdAt") String sort,
+        @RequestParam(defaultValue = "desc") String dir,
+        @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+        Model model) {
         List<TodoSummaryView> todos = mapper.toSummaryList(
             todoManagement.listTodos(status, DEFAULT_LIMIT, sort, dir));
         model.addAttribute("todos", todos);
@@ -37,16 +46,16 @@ public class TodoViewController {
         model.addAttribute("currentDir", dir);
         model.addAttribute("statuses", TodoStatus.values());
         model.addAttribute("workspacePaths", workspacePathResolver.resolve());
-        return "true".equals(hxRequest) ? "fragments/todo-table :: table" : "todos/list";
+        return Objects.equals(hxRequest, "true") ? "fragments/todo-table :: table" : "todos/list";
     }
 
     @PostMapping
     public String create(
-            @RequestParam String title,
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) String workspace,
-            Model model) {
-        Requester webRequester = Requester.builder()
+        @RequestParam String title,
+        @RequestParam(required = false) String description,
+        @RequestParam(required = false) String workspace,
+        Model model) {
+        var webRequester = Requester.builder()
             .telegramUserId(0L)
             .telegramChatId(0L)
             .telegramUsername("web")
@@ -67,11 +76,11 @@ public class TodoViewController {
 
     @PostMapping("/{id}/done")
     public String markDone(
-            @PathVariable long id,
-            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-            Model model) {
+        @PathVariable long id,
+        @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+        Model model) {
         todoManagement.markDone(id);
-        if ("true".equals(hxRequest)) {
+        if (Objects.equals(hxRequest, "true")) {
             return refreshTable(model);
         }
         return detail(id, model);
@@ -79,11 +88,11 @@ public class TodoViewController {
 
     @PostMapping("/{id}/cancel")
     public String cancel(
-            @PathVariable long id,
-            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-            Model model) {
+        @PathVariable long id,
+        @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+        Model model) {
         todoManagement.cancel(id);
-        if ("true".equals(hxRequest)) {
+        if (Objects.equals(hxRequest, "true")) {
             return refreshTable(model);
         }
         return detail(id, model);
@@ -91,10 +100,10 @@ public class TodoViewController {
 
     @PostMapping("/{id}/work")
     public String workOn(
-            @PathVariable long id,
-            @RequestParam String mode,
-            @RequestParam(required = false) String workspace,
-            Model model) {
+        @PathVariable long id,
+        @RequestParam String mode,
+        @RequestParam(required = false) String workspace,
+        Model model) {
         todoManagement.workOn(id, mode, workspace);
         return detail(id, model);
     }

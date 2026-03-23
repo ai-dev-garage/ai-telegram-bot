@@ -6,6 +6,7 @@ import com.ai.dev.garage.bot.domain.Job;
 /**
  * Internal inbound port: post-create transitions (agent path vs queue vs awaiting approval).
  */
+@FunctionalInterface
 public interface JobLifecycle {
 
     /**

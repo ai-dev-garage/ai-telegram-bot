@@ -7,11 +7,15 @@ import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
 import com.ai.dev.garage.bot.application.port.in.JobManagement;
 import com.ai.dev.garage.bot.config.RunnerProperties;
 import com.ai.dev.garage.bot.domain.Requester;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Objects;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Order(20)
@@ -48,7 +52,7 @@ public class RunCommand implements TelegramCommand {
                 "Usage: /run <shell or task> — or /agent <prompt> / /agent <project> <prompt> for Cursor/Claude handoff.");
             return;
         }
-        Requester requester = Requester.builder()
+        var requester = Requester.builder()
             .telegramUserId(ctx.userId())
             .telegramUsername(ctx.username())
             .telegramChatId(ctx.chatId())
@@ -56,7 +60,7 @@ public class RunCommand implements TelegramCommand {
         String cwd = navigationStateStore.getSelectedPath(ctx.chatId(), ctx.userId()).orElse(null);
         JobResponse job = jobResponseMapper.toResponse(jobManagement.createJob(intent, requester, cwd));
         String agentRuntime = normalizeAgentRuntime(runnerProperties.getAgentRuntime());
-        StringBuilder msg = new StringBuilder();
+        var msg = new StringBuilder();
         msg.append("Job #").append(job.getJobId()).append(" received. Classifying…");
         if (cwd != null && !cwd.isBlank()) {
             msg.append("\n\nWorkspace: ").append(cwd);
@@ -66,7 +70,7 @@ public class RunCommand implements TelegramCommand {
         } else {
             msg.append("\n\n→ Open Cursor and run: Process pending agent task.");
         }
-        if ("pending_cursor".equals(job.getStatus())) {
+        if (Objects.equals(job.getStatus(), "pending_cursor")) {
             msg.append("\n\nUse /logs ").append(job.getJobId()).append(" to see agent activity.");
         }
         telegramBotClient.sendPlain(ctx.chatId(), msg.toString());

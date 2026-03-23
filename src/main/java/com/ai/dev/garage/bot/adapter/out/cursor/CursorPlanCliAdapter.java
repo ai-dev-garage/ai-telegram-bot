@@ -7,13 +7,16 @@ import com.ai.dev.garage.bot.application.port.out.PlanSessionResult.ParsedMessag
 import com.ai.dev.garage.bot.application.service.AgentQuestionParser;
 import com.ai.dev.garage.bot.config.CursorCliProperties;
 import com.ai.dev.garage.bot.domain.Job;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -29,9 +32,9 @@ public class CursorPlanCliAdapter implements PlanCliRuntime {
 
     @Override
     public PlanSessionResult startPlan(Job job, String prompt) {
-        String workspace = workspaceResolver.resolve(job, cursorCliProperties.getWorkspace());
-        String fullPrompt = appendPlanInstructions(prompt);
-        List<String> cmd = List.of(
+        var workspace = workspaceResolver.resolve(job, cursorCliProperties.getWorkspace());
+        var fullPrompt = appendPlanInstructions(prompt);
+        var cmd = List.of(
             "cursor", "agent",
             "-p", "--plan", "--trust",
             "--output-format", "stream-json",
@@ -43,8 +46,8 @@ public class CursorPlanCliAdapter implements PlanCliRuntime {
 
     @Override
     public PlanSessionResult resumePlan(Job job, String cliSessionId, String userMessage) {
-        String workspace = workspaceResolver.resolve(job, cursorCliProperties.getWorkspace());
-        List<String> cmd = List.of(
+        var workspace = workspaceResolver.resolve(job, cursorCliProperties.getWorkspace());
+        var cmd = List.of(
             "cursor", "agent",
             "-p", "--plan", "--trust",
             "--output-format", "stream-json",

@@ -1,11 +1,13 @@
 package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 /**
  * Aggregates {@link TelegramCommand#botCommands()} and {@link TelegramCommand#helpLines()}

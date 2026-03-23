@@ -4,4 +4,5 @@ public record StatusCountView(
     String status,
     long count,
     String badgeClass
-) {}
+) {
+}

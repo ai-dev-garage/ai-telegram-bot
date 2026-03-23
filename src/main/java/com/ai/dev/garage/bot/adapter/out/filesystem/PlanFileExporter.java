@@ -4,21 +4,34 @@ import com.ai.dev.garage.bot.config.RunnerProperties;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
 import com.ai.dev.garage.bot.domain.PlanSession;
+
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class PlanFileExporter {
+
+    private static final int PLAN_FILE_SLUG_MAX_LEN = 40;
+    private static final int YAML_OVERVIEW_MAX_LEN = 200;
+    private static final int DERIVE_NAME_MAX_LEN = 60;
+    private static final int DERIVE_NAME_KEEP_LEN = 57;
+    private static final String ELLIPSIS = "...";
 
     private final RunnerProperties runnerProperties;
     private final ObjectMapper objectMapper;
@@ -33,8 +46,9 @@ public class PlanFileExporter {
             Path dir = resolveExportDir(job);
             Files.createDirectories(dir);
 
-            String slug = slugify(job.getIntent(), 40);
-            String hex = String.format("%08x", (long) job.getId());
+            String slug = slugify(job.getIntent(), PLAN_FILE_SLUG_MAX_LEN);
+            long jobId = job.getId();
+            String hex = String.format(Locale.ROOT, "%08x", jobId);
             String filename = "plan_" + slug + "_" + hex + ".plan.md";
             Path file = dir.resolve(filename);
 
@@ -73,16 +87,19 @@ public class PlanFileExporter {
         }
         if (raw.startsWith("~/")) {
             raw = System.getProperty("user.home") + raw.substring(1);
-        } else if ("~".equals(raw)) {
+        } else if (Objects.equals(raw, "~")) {
             raw = System.getProperty("user.home");
         }
         return Path.of(raw);
     }
 
+    // Task payload is our own JSON; Map.class is sufficient and avoids a verbose TypeReference here.
     @SuppressWarnings("unchecked")
     private String extractWorkspace(Job job) {
         String payload = job.getTaskPayloadJson();
-        if (payload == null || payload.isBlank()) return null;
+        if (payload == null || payload.isBlank()) {
+            return null;
+        }
         try {
             Map<String, Object> map = objectMapper.readValue(payload, Map.class);
             Object ws = map.get("workspace");
@@ -93,11 +110,11 @@ public class PlanFileExporter {
         }
     }
 
-    private String formatPlanFile(Job job, PlanSession session, List<PlanQuestion> questions) {
-        StringBuilder sb = new StringBuilder();
+    private static String formatPlanFile(Job job, PlanSession session, List<PlanQuestion> questions) {
+        var sb = new StringBuilder();
 
-        String name = deriveName(job.getIntent());
-        String overview = job.getIntent() == null ? "" : truncate(job.getIntent(), 200);
+        var name = deriveName(job.getIntent());
+        var overview = job.getIntent() == null ? "" : truncate(job.getIntent(), YAML_OVERVIEW_MAX_LEN);
 
         sb.append("---\n");
         sb.append("name: ").append(yamlEscape(name)).append("\n");
@@ -125,7 +142,7 @@ public class PlanFileExporter {
             sb.append("\n## Q&A History\n");
             Map<Integer, List<PlanQuestion>> byRound = new TreeMap<>();
             for (PlanQuestion q : questions) {
-                byRound.computeIfAbsent(q.getRound(), k -> new java.util.ArrayList<>()).add(q);
+                byRound.computeIfAbsent(q.getRound(), k -> new ArrayList<>()).add(q);
             }
             for (var entry : byRound.entrySet()) {
                 sb.append("\n### Round ").append(entry.getKey()).append("\n\n");
@@ -141,17 +158,21 @@ public class PlanFileExporter {
     }
 
     private static String deriveName(String intent) {
-        if (intent == null || intent.isBlank()) return "Untitled Plan";
+        if (intent == null || intent.isBlank()) {
+            return "Untitled Plan";
+        }
         String name = intent.strip();
-        if (name.length() > 60) {
-            name = name.substring(0, 57) + "...";
+        if (name.length() > DERIVE_NAME_MAX_LEN) {
+            name = name.substring(0, DERIVE_NAME_KEEP_LEN) + ELLIPSIS;
         }
         return name;
     }
 
     private static String slugify(String text, int maxLen) {
-        if (text == null || text.isBlank()) return "untitled";
-        String slug = text.strip().toLowerCase()
+        if (text == null || text.isBlank()) {
+            return "untitled";
+        }
+        String slug = text.strip().toLowerCase(Locale.ROOT)
             .replaceAll("[^a-z0-9]+", "-")
             .replaceAll("^-+|-+$", "");
         if (slug.length() > maxLen) {
@@ -161,15 +182,17 @@ public class PlanFileExporter {
     }
 
     private static String yamlEscape(String s) {
-        if (s == null) return "\"\"";
+        if (s == null) {
+            return "\"\"";
+        }
         if (s.contains(":") || s.contains("#") || s.contains("\"") || s.contains("'")
-                || s.startsWith("{") || s.startsWith("[")) {
+            || s.startsWith("{") || s.startsWith("[")) {
             return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
         }
         return s;
     }
 
     private static String truncate(String s, int max) {
-        return s.length() <= max ? s : s.substring(0, max - 3) + "...";
+        return s.length() <= max ? s : s.substring(0, max - ELLIPSIS.length()) + ELLIPSIS;
     }
 }

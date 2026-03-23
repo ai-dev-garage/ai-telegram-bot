@@ -6,17 +6,23 @@ import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.ClassificationResult;
 import com.ai.dev.garage.bot.domain.RiskLevel;
 import com.ai.dev.garage.bot.domain.TaskType;
+
+import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class ClassificationService implements IntentClassification {
+
+    private static final int DEFAULT_SHELL_TIMEOUT_SECONDS = 300;
 
     private static final Pattern CONFLUENCE_HINT = Pattern.compile(
         "\\bconfluence\\b|create\\s+(a\\s+)?(new\\s+)?page|publish\\s+(to\\s+)?confluence");
@@ -26,11 +32,10 @@ public class ClassificationService implements IntentClassification {
     private final PolicyProvider policyProvider;
 
     @Override
-    @SuppressWarnings("unchecked")
     public ClassificationResult classify(String intent) {
         Map<String, Object> policy = policyProvider.loadPolicy();
         String normalized = intent == null ? "" : intent.trim();
-        String lower = normalized.toLowerCase();
+        String lower = normalized.toLowerCase(Locale.ROOT);
 
         return classifyConfluence(normalized, lower)
             .or(() -> classifyExplicitPlan(normalized))
@@ -38,7 +43,7 @@ public class ClassificationService implements IntentClassification {
             .orElseGet(() -> classifyShell(normalized, lower, policy));
     }
 
-    private Optional<ClassificationResult> classifyConfluence(String normalized, String lower) {
+    private static Optional<ClassificationResult> classifyConfluence(String normalized, String lower) {
         if (!CONFLUENCE_HINT.matcher(lower).find()) {
             return Optional.empty();
         }
@@ -50,7 +55,7 @@ public class ClassificationService implements IntentClassification {
         ));
     }
 
-    private Optional<ClassificationResult> classifyExplicitPlan(String normalized) {
+    private static Optional<ClassificationResult> classifyExplicitPlan(String normalized) {
         var m = EXPLICIT_PLAN.matcher(normalized);
         if (!m.matches()) {
             return Optional.empty();
@@ -67,7 +72,7 @@ public class ClassificationService implements IntentClassification {
         ));
     }
 
-    private Optional<ClassificationResult> classifyExplicitAgent(String normalized) {
+    private static Optional<ClassificationResult> classifyExplicitAgent(String normalized) {
         var m = EXPLICIT_AGENT.matcher(normalized);
         if (!m.matches()) {
             return Optional.empty();
@@ -84,16 +89,17 @@ public class ClassificationService implements IntentClassification {
         ));
     }
 
-    @SuppressWarnings("unchecked")
-    private ClassificationResult classifyShell(String normalized, String lower, Map<String, Object> policy) {
-        List<String> safeCommands = (List<String>) ((Map<String, Object>) policy.getOrDefault("allowlist_safe", Map.of()))
+    @SuppressWarnings("unchecked") // YAML policy maps are untyped; nested lists are shell allowlists/patterns
+    private static ClassificationResult classifyShell(String normalized, String lower, Map<String, Object> policy) {
+        var safeCommands = (List<String>) ((Map<String, Object>) policy.getOrDefault("allowlist_safe", Map.of()))
             .getOrDefault("shell_command", List.of());
-        List<String> riskyPatterns = (List<String>) ((Map<String, Object>) policy.getOrDefault(
+        var riskyPatterns = (List<String>) ((Map<String, Object>) policy.getOrDefault(
             "require_approval_patterns", Map.of()))
             .getOrDefault("shell_command", List.of());
 
         boolean safe = safeCommands.stream()
-            .anyMatch(s -> lower.equals(s.toLowerCase()) || lower.startsWith(s.toLowerCase() + " "));
+            .anyMatch(s -> lower.equals(s.toLowerCase(Locale.ROOT))
+                || lower.startsWith(s.toLowerCase(Locale.ROOT) + " "));
         boolean restricted = riskyPatterns.stream().anyMatch(lower::contains);
 
         RiskLevel risk = safe ? RiskLevel.LOW : (restricted ? RiskLevel.HIGH : RiskLevel.MEDIUM);
@@ -101,7 +107,7 @@ public class ClassificationService implements IntentClassification {
         Map<String, Object> shellPayload = new HashMap<>();
         shellPayload.put("command", normalized);
         shellPayload.put("cwd", null);
-        shellPayload.put("timeout_seconds", 300);
+        shellPayload.put("timeout_seconds", DEFAULT_SHELL_TIMEOUT_SECONDS);
 
         return new ClassificationResult(
             TaskType.SHELL_COMMAND,

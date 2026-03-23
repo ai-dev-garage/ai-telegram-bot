@@ -1,17 +1,19 @@
 package com.ai.dev.garage.bot.config;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app.telegram")
 @Getter
 @Setter
 public class TelegramProperties {
-    private boolean enabled = false;
+    private boolean enabled;
     private String token;
     private String allowedUserIds;
     private long pollingIntervalMs = 2000;

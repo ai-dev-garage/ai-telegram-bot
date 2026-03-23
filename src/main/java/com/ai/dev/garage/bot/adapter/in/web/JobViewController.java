@@ -1,5 +1,6 @@
 package com.ai.dev.garage.bot.adapter.in.web;
 
+import com.ai.dev.garage.bot.adapter.in.web.dto.JobDetailView;
 import com.ai.dev.garage.bot.adapter.in.web.dto.JobLogLineView;
 import com.ai.dev.garage.bot.application.port.in.JobActions;
 import com.ai.dev.garage.bot.application.port.in.JobViewQueries;
@@ -11,9 +12,7 @@ import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.TaskType;
-import jakarta.servlet.http.HttpServletResponse;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +21,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.List;
+import java.util.Objects;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequestMapping("/ui/jobs")
@@ -39,11 +45,11 @@ public class JobViewController {
 
     @GetMapping
     public String list(
-            @RequestParam(required = false) JobStatus status,
-            @RequestParam(defaultValue = "createdAt") String sort,
-            @RequestParam(defaultValue = "desc") String dir,
-            @RequestHeader(value = "HX-Request", required = false) String hxRequest,
-            Model model) {
+        @RequestParam(required = false) JobStatus status,
+        @RequestParam(defaultValue = "createdAt") String sort,
+        @RequestParam(defaultValue = "desc") String dir,
+        @RequestHeader(value = "HX-Request", required = false) String hxRequest,
+        Model model) {
 
         List<Job> jobs = jobViewQueries.listJobs(status, DEFAULT_LIMIT, sort, dir);
 
@@ -70,8 +76,8 @@ public class JobViewController {
         return "jobs/detail";
     }
 
-    private com.ai.dev.garage.bot.adapter.in.web.dto.JobDetailView buildPlanDetailView(
-            Job job, List<JobEvent> events, List<JobLog> logs) {
+    private JobDetailView buildPlanDetailView(
+        Job job, List<JobEvent> events, List<JobLog> logs) {
         PlanSession session = planSessionStore.findByJobId(job.getId()).orElse(null);
         List<PlanQuestion> questions = session != null
             ? planSessionStore.findAllQuestionsBySession(session.getId())
@@ -105,10 +111,10 @@ public class JobViewController {
 
     @GetMapping("/{id}/logs")
     public String logsAfter(
-            @PathVariable long id,
-            @RequestParam int after,
-            Model model,
-            HttpServletResponse response) {
+        @PathVariable long id,
+        @RequestParam int after,
+        Model model,
+        HttpServletResponse response) {
 
         List<JobLog> logs = jobViewQueries.getLogsAfter(id, after);
         List<JobLogLineView> lines = mapper.toLogLines(logs);
@@ -129,6 +135,6 @@ public class JobViewController {
     }
 
     private static boolean isHtmx(String headerValue) {
-        return "true".equals(headerValue);
+        return Objects.equals(headerValue, "true");
     }
 }

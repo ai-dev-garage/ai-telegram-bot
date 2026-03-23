@@ -1,7 +1,14 @@
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
+import org.gradle.api.plugins.quality.Checkstyle
 import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
     id 'java'
+    id 'checkstyle'
+    id 'pmd'
+    id 'com.github.spotbugs' version "${spotbugsGradlePluginVersion}"
+    id 'net.ltgt.errorprone' version "${errorpronePluginVersion}"
     id 'org.springframework.boot' version "${springBootVersion}"
     id 'io.spring.dependency-management' version "${springDependencyManagementVersion}"
 }
@@ -24,6 +31,9 @@ repositories {
 }
 
 dependencies {
+    errorprone "com.google.errorprone:error_prone_core:${errorproneCoreVersion}"
+    compileOnly "com.google.errorprone:error_prone_annotations:${errorproneCoreVersion}"
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
@@ -56,6 +66,87 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+checkstyle {
+    toolVersion = "${checkstyleVersion}"
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    configProperties['checkstyle.suppressions.file'] =
+        file("${rootDir}/config/checkstyle/checkstyle-suppressions.xml").absolutePath
+    maxErrors = 0
+    // Allow a small budget for warning-severity checks (e.g. FileLength, MagicNumber); tighten over time.
+    maxWarnings = 10
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+pmd {
+    toolVersion = "${pmdVersion}"
+    rulesMinimumPriority = 3
+    ruleSets = []
+    ruleSetFiles = files("${rootDir}/config/pmd/java-design-rules.xml")
+    consoleOutput = true
+}
+
+tasks.withType(Pmd).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// Test sources: PMD JUnit-oriented rules overlap Checkstyle; analyze production code only.
+tasks.named('pmdTest') {
+    enabled = false
+}
+
+spotbugs {
+    toolVersion = "${spotbugsVersion}"
+    // Groovy DSL: use valueOf — direct enum refs can be mis-resolved (see spotbugs-gradle-plugin#965).
+    effort = Effort.valueOf('DEFAULT')
+    reportLevel = Confidence.valueOf('MEDIUM')
+    excludeFilter = file("${rootDir}/config/spotbugs/spotbugs-exclude.xml")
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+// Error Prone: runs on every JavaCompile (main + test). Versions: errorpronePluginVersion / errorproneCoreVersion in gradle.properties.
+// Test compilations use compilingTestOnlyCode (plugin default for test source sets), which relaxes some checks.
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add('-parameters')
+    options.errorprone {
+        disableWarningsInGeneratedCode = true
+        // Enable checks that are off by default, as compiler warnings (review periodically; promote or suppress).
+        allDisabledChecksAsWarnings = true
+        // EP 2.48: UnnecessarySemicolon can throw IndexOutOfBoundsException on some Lombok @ConfigurationProperties classes.
+        disable('UnnecessarySemicolon')
+        // We target Java 21 (javaLanguageVersion); this check assumes JDK 8 library compatibility and floods false positives.
+        disable('Java8ApiChecker')
+        // Requires @com.google.errorprone.annotations.Var on non-constant locals; we prefer explicit types for reassigned locals instead.
+        disable('Var')
+        // JSpecify / nullness nudges; adopt package-wide @NullMarked + @Nullable when ready, not per-warning.
+        disable('AddNullMarkedToClass')
+        disable('ReturnMissingNullable')
+        disable('ParameterMissingNullable')
+        // Boolean literal call sites; prefer enums / named params — revisit when APIs are clearer.
+        disable('BooleanParameter')
+        // Defer: wide catch blocks that only surface unchecked failures (narrow in a follow-up).
+        disable('CatchingUnchecked')
+        // Defer: return List.copyOf / immutable views from getters (follow-up pass).
+        disable('ImmutableMemberCollection')
+        // Skip generated sources if annotation processors write under build/generated (defensive).
+        excludedPaths = '.*/build/generated/.*'
+    }
 }
 
 def bootRunJvmXms = ((findProperty('bootRunJvmXms') ?: '1g') as String).trim()

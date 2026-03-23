@@ -5,6 +5,7 @@ import com.ai.dev.garage.bot.domain.ClassificationResult;
 /**
  * Internal inbound port: classify raw intent into task type, payload, risk, approval (supporting {@code JobService}).
  */
+@FunctionalInterface
 public interface IntentClassification {
 
     ClassificationResult classify(String intent);

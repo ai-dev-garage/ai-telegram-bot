@@ -1,9 +1,11 @@
 package com.ai.dev.garage.bot.adapter.out.persistence;
 
 import com.ai.dev.garage.bot.domain.PlanQuestion;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PlanQuestionJpaRepository extends JpaRepository<PlanQuestion, Long> {
 

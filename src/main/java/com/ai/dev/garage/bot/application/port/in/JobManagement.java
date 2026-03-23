@@ -2,12 +2,16 @@ package com.ai.dev.garage.bot.application.port.in;
 
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.Requester;
+
 import java.util.List;
 
 public interface JobManagement {
 
     /**
-     * @param preferredShellCwd optional cwd for {@link com.ai.dev.garage.bot.domain.TaskType#SHELL_COMMAND} jobs (e.g. from Telegram navigation); must pass allowlist at execution time
+     * Creates a job from natural-language intent and requester context.
+     *
+     * @param preferredShellCwd optional cwd for {@link com.ai.dev.garage.bot.domain.TaskType#SHELL_COMMAND} jobs
+     *                          (e.g. from Telegram navigation); must pass allowlist at execution time
      */
     Job createJob(String intent, Requester requester, String preferredShellCwd);
 

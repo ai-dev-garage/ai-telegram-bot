@@ -1,14 +1,15 @@
 package com.ai.dev.garage.bot.config;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app.cursor")
 @Getter
 @Setter
 public class CursorCliProperties {
-    private boolean cliInvoke = false;
+    private boolean cliInvoke;
     private String workspace;
     private String prompt;
     private String planPrompt = "List each question on its own line ending with '?'. " +

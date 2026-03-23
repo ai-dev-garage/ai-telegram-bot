@@ -1,9 +1,10 @@
 package com.ai.dev.garage.bot.adapter.in.telegram;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import org.springframework.stereotype.Component;
 
 /**
  * Per Telegram chat + user, the last allowlisted working directory chosen via /navigation.

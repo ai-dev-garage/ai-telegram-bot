@@ -1,16 +1,10 @@
 package com.ai.dev.garage.bot.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.ai.dev.garage.bot.application.port.out.JobStore;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.Requester;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,6 +12,15 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JobActionsServiceTest {
@@ -42,7 +45,7 @@ class JobActionsServiceTest {
     @ParameterizedTest
     @EnumSource(names = {"SUCCESS", "FAILED", "CANCELLED"})
     void shouldThrowWhenCancelCalledForTerminalJob(JobStatus terminal) {
-        Job job = Job.builder()
+        var job = Job.builder()
             .id(1L)
             .requester(Requester.builder().telegramUserId(1L).telegramChatId(1L).build())
             .status(terminal)
@@ -57,7 +60,7 @@ class JobActionsServiceTest {
 
     @Test
     void shouldSetCancelledWhenCancelCalledForActiveJob() {
-        Job job = Job.builder()
+        var job = Job.builder()
             .id(3L)
             .requester(Requester.builder().telegramUserId(1L).telegramChatId(1L).build())
             .status(JobStatus.QUEUED)
@@ -66,7 +69,7 @@ class JobActionsServiceTest {
         when(jobStore.findById(3L)).thenReturn(Optional.of(job));
         when(jobStore.save(job)).thenReturn(job);
 
-        Job saved = jobActionsService.cancel(3L);
+        var saved = jobActionsService.cancel(3L);
 
         assertThat(saved.getStatus()).isEqualTo(JobStatus.CANCELLED);
         assertThat(saved.getFinishedAt()).isNotNull();
@@ -86,7 +89,7 @@ class JobActionsServiceTest {
 
     @Test
     void shouldThrowWhenRetryCalledForNonFailedJob() {
-        Job job = Job.builder()
+        var job = Job.builder()
             .id(2L)
             .requester(Requester.builder().telegramUserId(1L).telegramChatId(1L).build())
             .status(JobStatus.SUCCESS)
@@ -101,7 +104,7 @@ class JobActionsServiceTest {
 
     @Test
     void shouldRequeueWhenRetryCalledForFailedJob() {
-        Job job = Job.builder()
+        var job = Job.builder()
             .id(5L)
             .requester(Requester.builder().telegramUserId(1L).telegramChatId(1L).build())
             .status(JobStatus.FAILED)
@@ -113,7 +116,7 @@ class JobActionsServiceTest {
         when(jobStore.findById(5L)).thenReturn(Optional.of(job));
         when(jobStore.save(job)).thenReturn(job);
 
-        Job saved = jobActionsService.retry(5L);
+        var saved = jobActionsService.retry(5L);
 
         assertThat(saved.getStatus()).isEqualTo(JobStatus.QUEUED);
         assertThat(saved.getFinishedAt()).isNull();

@@ -5,16 +5,19 @@ import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobEvent;
 import com.ai.dev.garage.bot.domain.JobLog;
 import com.ai.dev.garage.bot.domain.JobStatus;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +33,7 @@ public class JobViewQueriesJpaAdapter implements JobViewQueries {
         int n = Math.max(1, limit);
         Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         String property = "createdAt".equalsIgnoreCase(sortField) ? "createdAt" : "id";
-        Pageable pageable = PageRequest.of(0, n, direction, property);
+        var pageable = PageRequest.of(0, n, direction, property);
         if (status == null) {
             return jobJpaRepository.findAll(pageable).getContent();
         }

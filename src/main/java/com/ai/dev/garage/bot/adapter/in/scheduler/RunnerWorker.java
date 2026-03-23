@@ -1,17 +1,20 @@
 package com.ai.dev.garage.bot.adapter.in.scheduler;
 
 import com.ai.dev.garage.bot.application.execution.TaskExecutionOrchestrator;
-import com.ai.dev.garage.bot.application.execution.TaskExecutionResult;
+import com.ai.dev.garage.bot.application.execution.model.TaskExecutionResult;
 import com.ai.dev.garage.bot.application.port.out.JobLogAppender;
 import com.ai.dev.garage.bot.application.service.JobService;
 import com.ai.dev.garage.bot.config.RunnerProperties;
 import com.ai.dev.garage.bot.domain.Job;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Background job poller. Excluded from the {@code test} profile so {@code @SpringBootTest} runs do not

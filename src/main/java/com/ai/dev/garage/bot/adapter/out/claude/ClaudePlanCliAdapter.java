@@ -9,14 +9,17 @@ import com.ai.dev.garage.bot.application.port.out.PlanSessionResult.ParsedMessag
 import com.ai.dev.garage.bot.application.service.AgentQuestionParser;
 import com.ai.dev.garage.bot.config.ClaudeCliProperties;
 import com.ai.dev.garage.bot.domain.Job;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 
 /**
  * Runs Claude Code in print mode for Telegram plan sessions. Uses the same NDJSON stream parsing
@@ -147,7 +150,9 @@ public class ClaudePlanCliAdapter implements PlanCliRuntime {
         return prompt + "\n\n" + suffix;
     }
 
-    /** Avoid logging huge prompts; keep resume id visible for debugging. */
+    /**
+     * Avoid logging huge prompts; keep resume id visible for debugging.
+     */
     private static String maskResumeArg(List<String> cmd) {
         int resumeIdx = cmd.indexOf("--resume");
         if (resumeIdx < 0 || resumeIdx + 1 >= cmd.size()) {

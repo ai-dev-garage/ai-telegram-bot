@@ -4,22 +4,28 @@ import com.ai.dev.garage.bot.adapter.in.telegram.InlineKeyboardBuilder;
 import com.ai.dev.garage.bot.adapter.in.telegram.NavigationStateStore;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
 import com.ai.dev.garage.bot.application.port.in.TodoManagement;
-import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoSource;
 import com.ai.dev.garage.bot.domain.TodoStatus;
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static com.ai.dev.garage.bot.adapter.in.telegram.command.TelegramCommand.BotCommandInfo;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import jakarta.persistence.EntityNotFoundException;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
 @Order(15)
 @ConditionalOnProperty(prefix = "app.telegram", name = "enabled", havingValue = "true")
@@ -27,6 +33,8 @@ import org.springframework.stereotype.Component;
 public class TodoCommand implements TelegramCommand {
 
     public static final String CALLBACK_PREFIX = "todo:";
+
+    private static final int DEFAULT_TODO_LIST_LIMIT = 20;
     private static final Pattern ID_PATTERN = Pattern.compile("^#?(\\d+)$");
     private static final Pattern DONE_PATTERN = Pattern.compile("(?i)^done\\s+#?(\\d+)$");
     private static final Pattern CANCEL_PATTERN = Pattern.compile("(?i)^cancel\\s+#?(\\d+)$");
@@ -56,17 +64,19 @@ public class TodoCommand implements TelegramCommand {
 
     @Override
     public boolean canHandle(String text) {
-        if (text == null) return false;
-        String t = text.trim().toLowerCase();
-        return t.equals("/todo") || t.startsWith("/todo ")
-            || t.equals("/todos");
+        if (text == null) {
+            return false;
+        }
+        String t = text.trim().toLowerCase(Locale.ROOT);
+        return Objects.equals(t, "/todo") || t.startsWith("/todo ")
+            || Objects.equals(t, "/todos");
     }
 
     @Override
     public void handle(TelegramCommandContext ctx) {
         String trimmed = ctx.text().trim();
 
-        if (trimmed.equalsIgnoreCase("/todos")) {
+        if ("/todos".equalsIgnoreCase(trimmed)) {
             handleList(ctx);
             return;
         }
@@ -105,12 +115,12 @@ public class TodoCommand implements TelegramCommand {
     }
 
     private void handleList(TelegramCommandContext ctx) {
-        List<Todo> todos = todoManagement.listTodos(null, 20);
+        List<Todo> todos = todoManagement.listTodos(null, DEFAULT_TODO_LIST_LIMIT);
         if (todos.isEmpty()) {
             telegramBotClient.sendPlain(ctx.chatId(), "No todos found. Create one with /todo <text>");
             return;
         }
-        StringBuilder sb = new StringBuilder("Your todos:\n\n");
+        var sb = new StringBuilder("Your todos:\n\n");
         for (Todo t : todos) {
             sb.append(statusIcon(t.getStatus()))
                 .append(" #").append(t.getId())
@@ -125,13 +135,13 @@ public class TodoCommand implements TelegramCommand {
     }
 
     private void handleCreate(TelegramCommandContext ctx, String title) {
-        Requester requester = Requester.builder()
+        var requester = Requester.builder()
             .telegramUserId(ctx.userId())
             .telegramUsername(ctx.username())
             .telegramChatId(ctx.chatId())
             .build();
         Optional<String> workspace = navigationStateStore.getSelectedPath(ctx.chatId(), ctx.userId());
-        Todo todo = todoManagement.createTodo(
+        var todo = todoManagement.createTodo(
             title, null, TodoSource.TELEGRAM, requester,
             workspace.orElse(null));
         String msg = "Todo #" + todo.getId() + " created: " + todo.getTitle();
@@ -143,8 +153,8 @@ public class TodoCommand implements TelegramCommand {
 
     private void handleDetail(TelegramCommandContext ctx, long id) {
         try {
-            Todo todo = todoManagement.getTodo(id);
-            StringBuilder sb = new StringBuilder();
+            var todo = todoManagement.getTodo(id);
+            var sb = new StringBuilder();
             sb.append(statusIcon(todo.getStatus()))
                 .append(" Todo #").append(todo.getId())
                 .append("\n\nTitle: ").append(todo.getTitle());
@@ -174,7 +184,14 @@ public class TodoCommand implements TelegramCommand {
             } else {
                 telegramBotClient.sendPlain(ctx.chatId(), sb.toString());
             }
-        } catch (Exception e) {
+        } catch (EntityNotFoundException e) {
+            log.debug(
+                "Todo detail requested but not found: id={}, chatId={}, userId={}",
+                id,
+                ctx.chatId(),
+                ctx.userId(),
+                e
+            );
             telegramBotClient.sendPlain(ctx.chatId(), "Todo not found: #" + id);
         }
     }
@@ -221,8 +238,8 @@ public class TodoCommand implements TelegramCommand {
     public void handleWorkCallback(Long chatId, Long userId, long todoId, String mode) {
         try {
             Optional<String> workspace = navigationStateStore.getSelectedPath(chatId, userId);
-            Job job = todoManagement.workOn(todoId, mode, workspace.orElse(null));
-            StringBuilder msg = new StringBuilder();
+            var job = todoManagement.workOn(todoId, mode, workspace.orElse(null));
+            var msg = new StringBuilder();
             msg.append("Todo #").append(todoId).append(" -> Job #").append(job.getId());
             msg.append(" (").append(mode).append(" mode)");
             if ("plan".equalsIgnoreCase(mode)) {

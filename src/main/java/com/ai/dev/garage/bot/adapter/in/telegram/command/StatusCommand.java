@@ -4,20 +4,23 @@ import com.ai.dev.garage.bot.adapter.in.rest.JobResponseMapper;
 import com.ai.dev.garage.bot.adapter.in.rest.dto.JobResponse;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
 import com.ai.dev.garage.bot.application.port.in.JobManagement;
-import static com.ai.dev.garage.bot.adapter.in.telegram.command.TelegramCommand.BotCommandInfo;
 
-import java.util.List;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Order(30)
 @ConditionalOnProperty(prefix = "app.telegram", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class StatusCommand implements TelegramCommand {
+
+    private static final int DEFAULT_JOB_LIST_LIMIT = 5;
 
     private final JobManagement jobManagement;
     private final JobResponseMapper jobResponseMapper;
@@ -42,8 +45,9 @@ public class StatusCommand implements TelegramCommand {
     public void handle(TelegramCommandContext ctx) {
         String arg = ctx.text().replaceFirst("^/status", "").trim();
         if (arg.isBlank()) {
-            List<JobResponse> jobs = jobManagement.listJobs(5).stream().map(jobResponseMapper::toResponse).toList();
-            StringBuilder sb = new StringBuilder();
+            List<JobResponse> jobs = jobManagement.listJobs(DEFAULT_JOB_LIST_LIMIT).stream()
+                .map(jobResponseMapper::toResponse).toList();
+            var sb = new StringBuilder();
             for (JobResponse j : jobs) {
                 sb.append("• ").append(j.getJobId()).append(" — ").append(j.getStatus()).append(" (")
                     .append(j.getTaskType()).append(")\n");
@@ -56,7 +60,7 @@ public class StatusCommand implements TelegramCommand {
             + "\nRisk: " + j.getRiskLevel()
             + "\nIntent: " + j.getIntent()
             + formatAgentQueuedHint(j)
-            + formatResult(j);
+            + StatusCommand.formatResult(j);
         telegramBotClient.sendPlain(ctx.chatId(), body);
     }
 
@@ -72,12 +76,12 @@ public class StatusCommand implements TelegramCommand {
             + "/approve is not used for agent tasks — they are auto-approved.";
     }
 
-    private String formatResult(JobResponse response) {
+    private static String formatResult(JobResponse response) {
         Map<String, Object> result = response.getResult();
         if (result == null || result.isEmpty()) {
             return "";
         }
-        StringBuilder builder = new StringBuilder();
+        var builder = new StringBuilder();
         if (result.get("summary") != null) {
             builder.append("\n\nResult: ").append(result.get("summary"));
         }

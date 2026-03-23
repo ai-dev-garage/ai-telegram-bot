@@ -4,13 +4,14 @@ import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.TaskType;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface JobJpaRepository extends JpaRepository<Job, Long> {
     List<Job> findAllByOrderByIdDesc(Pageable pageable);
@@ -23,6 +24,6 @@ public interface JobJpaRepository extends JpaRepository<Job, Long> {
     List<Object[]> countGroupedByStatus();
 
     @Query("SELECT j FROM Job j WHERE j.status = :status AND j.approvalState = :approvalState "
-         + "AND j.taskType NOT IN :excludedTypes ORDER BY j.id ASC LIMIT 1")
+        + "AND j.taskType NOT IN :excludedTypes ORDER BY j.id ASC LIMIT 1")
     Optional<Job> findNextRunnable(JobStatus status, ApprovalState approvalState, List<TaskType> excludedTypes);
 }

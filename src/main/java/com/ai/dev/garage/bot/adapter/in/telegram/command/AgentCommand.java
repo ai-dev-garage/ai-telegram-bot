@@ -2,21 +2,22 @@ package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
 import com.ai.dev.garage.bot.adapter.in.rest.JobResponseMapper;
 import com.ai.dev.garage.bot.adapter.in.rest.dto.JobResponse;
-import com.ai.dev.garage.bot.adapter.in.telegram.NavigationStateStore;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
+import com.ai.dev.garage.bot.adapter.in.telegram.command.support.WorkspaceResolutionService;
 import com.ai.dev.garage.bot.application.port.in.JobManagement;
-import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
 import com.ai.dev.garage.bot.config.RunnerProperties;
 import com.ai.dev.garage.bot.domain.Requester;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Order(18)
@@ -27,9 +28,8 @@ public class AgentCommand implements TelegramCommand {
     private final JobManagement jobManagement;
     private final JobResponseMapper jobResponseMapper;
     private final TelegramBotClient telegramBotClient;
-    private final NavigationStateStore navigationStateStore;
+    private final WorkspaceResolutionService workspaceResolutionService;
     private final RunnerProperties runnerProperties;
-    private final AllowedPathValidator allowedPathValidator;
 
     @Override
     public List<BotCommandInfo> botCommands() {
@@ -48,8 +48,8 @@ public class AgentCommand implements TelegramCommand {
         if (text == null) {
             return false;
         }
-        String t = text.trim().toLowerCase();
-        return t.equals("/agent") || t.startsWith("/agent ");
+        String t = text.trim().toLowerCase(Locale.ROOT);
+        return Objects.equals(t, "/agent") || t.startsWith("/agent ");
     }
 
     @Override
@@ -60,36 +60,25 @@ public class AgentCommand implements TelegramCommand {
             return;
         }
 
-        Requester requester = Requester.builder()
+        var requester = Requester.builder()
             .telegramUserId(ctx.userId())
             .telegramUsername(ctx.username())
             .telegramChatId(ctx.chatId())
             .build();
 
-        String intent;
-        String workspace = null;
-
-        String firstToken = after.split("\\s+", 2)[0];
-        if (firstToken.startsWith("@") && after.length() > firstToken.length()) {
-            String folderName = firstToken.substring(1);
-            workspace = resolveAtFolder(ctx, folderName);
-            if (workspace == null) {
-                return;
-            }
-            intent = "agent " + after.substring(firstToken.length()).trim();
-        } else {
-            workspace = requireCwd(ctx);
-            if (workspace == null) {
-                return;
-            }
-            intent = "agent " + after;
+        Optional<WorkspaceResolutionService.Resolution> resolution =
+            workspaceResolutionService.resolveWorkspaceAndPrompt(ctx, after, "agent");
+        if (resolution.isEmpty()) {
+            return;
         }
+        String workspace = resolution.get().workspace();
+        String intent = "agent " + resolution.get().prompt();
 
         JobResponse job = jobResponseMapper.toResponse(jobManagement.createJob(intent, requester, workspace));
         String agentRuntime = normalizeAgentRuntime(runnerProperties.getAgentRuntime());
-        StringBuilder msg = new StringBuilder();
+        var msg = new StringBuilder();
         msg.append("Job #").append(job.getJobId()).append(" received. Classifying…");
-        if (workspace != null && !workspace.isBlank()) {
+        if (!workspace.isBlank()) {
             msg.append("\n\nWorkspace: ").append(workspace);
         }
         if ("claude".equalsIgnoreCase(agentRuntime)) {
@@ -97,44 +86,10 @@ public class AgentCommand implements TelegramCommand {
         } else {
             msg.append("\n\n→ Open Cursor and run: Process pending agent task.");
         }
-        if ("pending_cursor".equals(job.getStatus())) {
+        if (Objects.equals(job.getStatus(), "pending_cursor")) {
             msg.append("\n\nUse /logs ").append(job.getJobId()).append(" to see agent activity.");
         }
         telegramBotClient.sendPlain(ctx.chatId(), msg.toString());
-    }
-
-    private String requireCwd(TelegramCommandContext ctx) {
-        Optional<String> cwd = navigationStateStore.getSelectedPath(ctx.chatId(), ctx.userId());
-        if (cwd.isEmpty() || cwd.get().isBlank()) {
-            telegramBotClient.sendPlain(ctx.chatId(),
-                "No working folder selected. Use /nav to pick one, or:\n/agent @folder <prompt>");
-            return null;
-        }
-        return cwd.get();
-    }
-
-    private String resolveAtFolder(TelegramCommandContext ctx, String folderName) {
-        Optional<String> cwd = navigationStateStore.getSelectedPath(ctx.chatId(), ctx.userId());
-        if (cwd.isEmpty()) {
-            telegramBotClient.sendPlain(ctx.chatId(),
-                "No working folder selected. Use /nav first, then /agent @folder <prompt>.");
-            return null;
-        }
-        try {
-            Path target = Path.of(cwd.get(), folderName).toRealPath();
-            if (!Files.isDirectory(target)) {
-                telegramBotClient.sendPlain(ctx.chatId(), "Not a directory: " + folderName);
-                return null;
-            }
-            if (!allowedPathValidator.isAllowedCwd(target.toString())) {
-                telegramBotClient.sendPlain(ctx.chatId(), "Folder not under allowed path: " + folderName);
-                return null;
-            }
-            return target.toString();
-        } catch (IOException e) {
-            telegramBotClient.sendPlain(ctx.chatId(), "Folder not found: " + folderName);
-            return null;
-        }
     }
 
     private static String usage() {

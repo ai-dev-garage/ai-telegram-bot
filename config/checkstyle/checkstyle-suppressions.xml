@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+<suppressions>
+    <!-- Spring Boot entry / config types: public constructor is intentional -->
+    <suppress files=".*Application\.java" checks="HideUtilityClassConstructor"/>
+    <suppress files=".*Config\.java" checks="HideUtilityClassConstructor"/>
+    <suppress files=".*Configuration\.java" checks="HideUtilityClassConstructor"/>
+
+    <!-- JPA entities / enums: star imports -->
+    <suppress files=".*[/\\]domain[/\\].*" checks="AvoidStarImport|ImportOrder"/>
+
+    <!-- Tests: noisy checks; `checks` is one regex (use |), not comma-separated. -->
+    <suppress files=".*src[/\\]test[/\\]java.*" checks="MagicNumber|AnnotationLocation|DeclarationOrder|ImportOrder"/>
+
+    <suppress files=".*Config\.java" checks="FinalClass"/>
+</suppressions>

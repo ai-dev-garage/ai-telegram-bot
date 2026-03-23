@@ -1,13 +1,14 @@
 package com.ai.dev.garage.bot.adapter.in.rest;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.ai.dev.garage.bot.adapter.in.rest.dto.TodoResponse;
 import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoSource;
 import com.ai.dev.garage.bot.domain.TodoStatus;
-import java.time.OffsetDateTime;
+
 import org.junit.jupiter.api.Test;
+
+import java.time.OffsetDateTime;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class TodoResponseMapperTest {
 
@@ -17,7 +18,7 @@ class TodoResponseMapperTest {
     void shouldMapAllFieldsWhenTodoHasAllValues() {
         OffsetDateTime created = OffsetDateTime.parse("2025-01-01T10:00:00Z");
         OffsetDateTime updated = OffsetDateTime.parse("2025-01-01T11:00:00Z");
-        Todo todo = Todo.builder()
+        var todo = Todo.builder()
             .id(42L)
             .title("Fix CI")
             .description("CI is broken on main")
@@ -29,7 +30,7 @@ class TodoResponseMapperTest {
             .updatedAt(updated)
             .build();
 
-        TodoResponse response = mapper.toResponse(todo);
+        var response = mapper.toResponse(todo);
 
         assertThat(response.getId()).isEqualTo(42L);
         assertThat(response.getTitle()).isEqualTo("Fix CI");
@@ -44,14 +45,14 @@ class TodoResponseMapperTest {
 
     @Test
     void shouldHandleNullTimestamps() {
-        Todo todo = Todo.builder()
+        var todo = Todo.builder()
             .id(1L)
             .title("Quick note")
             .status(TodoStatus.OPEN)
             .source(TodoSource.WEB)
             .build();
 
-        TodoResponse response = mapper.toResponse(todo);
+        var response = mapper.toResponse(todo);
 
         assertThat(response.getCreatedAt()).isNull();
         assertThat(response.getUpdatedAt()).isNull();

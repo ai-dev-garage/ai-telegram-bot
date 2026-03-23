@@ -1,13 +1,16 @@
 package com.ai.dev.garage.bot.adapter.out.cursor;
 
 import com.ai.dev.garage.bot.config.RunnerProperties;
+
+import org.springframework.stereotype.Component;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 /**
  * Prefixes intent for trusted-bot hints and optionally signs task file fields (HMAC-SHA256).
@@ -16,30 +19,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AgentTaskSigner {
 
-    private static final String HMAC_SHA256 = "HmacSHA256";
     static final String SIGN_VERSION = "v1";
+    private static final String HMAC_SHA256 = "HmacSHA256";
 
     private final RunnerProperties runnerProperties;
 
-    public String buildIntentForTaskFile(String intentBody) {
-        if (intentBody == null) {
-            intentBody = "";
-        }
-        String phrase = runnerProperties.getTaskAuthSecretPhrase();
-        if (phrase == null || phrase.isBlank()) {
-            return intentBody;
-        }
-        String marker = runnerProperties.getTaskTrustMarkerLine();
-        if (marker == null || marker.isBlank()) {
-            marker = "[TASK_RUNNER_TRUSTED]";
-        }
-        return marker.trim() + "\n" + phrase.trim() + "\n\n" + intentBody;
-    }
-
-    /**
-     * @return hex signature, or empty if HMAC secret not configured
-     */
-    public Optional<String> signPayload(
+    public record SignPayload(
         String jobId,
         String agentHint,
         String createdAt,
@@ -48,6 +33,27 @@ public class AgentTaskSigner {
         String issuedAt,
         String workspace
     ) {
+    }
+
+    public String buildIntentForTaskFile(String intentBody) {
+        String body = intentBody == null ? "" : intentBody;
+        String phrase = runnerProperties.getTaskAuthSecretPhrase();
+        if (phrase == null || phrase.isBlank()) {
+            return body;
+        }
+        String marker = runnerProperties.getTaskTrustMarkerLine();
+        if (marker == null || marker.isBlank()) {
+            marker = "[TASK_RUNNER_TRUSTED]";
+        }
+        return marker.trim() + "\n" + phrase.trim() + "\n\n" + body;
+    }
+
+    /**
+     * Computes HMAC-SHA256 hex for the signed task payload, or empty when no HMAC secret is configured.
+     *
+     * @return hex signature, or empty if HMAC secret not configured
+     */
+    public Optional<String> signPayload(SignPayload signPayload) {
         String secret = runnerProperties.getTaskAuthHmacSecret();
         if (secret == null || secret.isBlank()) {
             return Optional.empty();
@@ -55,13 +61,13 @@ public class AgentTaskSigner {
         String payload = String.join(
             "|",
             SIGN_VERSION,
-            nullToEmpty(jobId),
-            nullToEmpty(agentHint),
-            nullToEmpty(createdAt),
-            nullToEmpty(intentBody),
-            nullToEmpty(nonce),
-            nullToEmpty(issuedAt),
-            nullToEmpty(workspace)
+            nullToEmpty(signPayload.jobId()),
+            nullToEmpty(signPayload.agentHint()),
+            nullToEmpty(signPayload.createdAt()),
+            nullToEmpty(signPayload.intentBody()),
+            nullToEmpty(signPayload.nonce()),
+            nullToEmpty(signPayload.issuedAt()),
+            nullToEmpty(signPayload.workspace())
         );
         try {
             Mac mac = Mac.getInstance(HMAC_SHA256);

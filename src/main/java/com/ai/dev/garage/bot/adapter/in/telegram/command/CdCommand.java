@@ -2,17 +2,22 @@ package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
 import com.ai.dev.garage.bot.adapter.in.telegram.NavigationStateStore;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
+import com.ai.dev.garage.bot.adapter.in.telegram.command.support.DirectoryListingHelper;
 import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 @Component
 @Order(14)
@@ -40,7 +45,7 @@ public class CdCommand implements TelegramCommand {
             return false;
         }
         String t = text.trim();
-        return t.equals("/cd") || t.startsWith("/cd ");
+        return Objects.equals(t, "/cd") || t.startsWith("/cd ");
     }
 
     @Override
@@ -74,7 +79,7 @@ public class CdCommand implements TelegramCommand {
      * Resolve target directory and validate. Returns canonical path or null if not allowed/not found.
      */
     public String changeDirectory(String currentCwd, String arg) {
-        if ("..".equals(arg)) {
+        if (Objects.equals(arg, "..")) {
             Path parent = Path.of(currentCwd).getParent();
             if (parent == null || !allowedPathValidator.isAllowedCwd(parent.toString())) {
                 return null;
@@ -85,7 +90,7 @@ public class CdCommand implements TelegramCommand {
                 return null;
             }
         }
-        Path target = Path.of(currentCwd, arg);
+        var target = Path.of(currentCwd, arg);
         try {
             Path real = target.toRealPath();
             if (!Files.isDirectory(real)) {

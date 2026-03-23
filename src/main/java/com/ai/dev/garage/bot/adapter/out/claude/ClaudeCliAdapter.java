@@ -6,24 +6,29 @@ import com.ai.dev.garage.bot.application.port.out.AgentTaskRuntime;
 import com.ai.dev.garage.bot.application.port.out.JobLogAppender;
 import com.ai.dev.garage.bot.config.ClaudeCliProperties;
 import com.ai.dev.garage.bot.domain.Job;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "app.runner", name = "agent-runtime", havingValue = "claude")
 public class ClaudeCliAdapter implements AgentTaskRuntime {
-    private static final Logger agentLog = LoggerFactory.getLogger("com.ai.dev.garage.bot.agent");
+    private static final Logger AGENT_LOG = LoggerFactory.getLogger("com.ai.dev.garage.bot.agent");
 
     private final AgentTaskFileWriter agentTaskFileWriter;
     private final ClaudeCliProperties claudeCliProperties;
@@ -45,26 +50,28 @@ public class ClaudeCliAdapter implements AgentTaskRuntime {
             ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true);
             String workspaceDir = workspaceResolver.resolve(job, claudeCliProperties.getWorkspace());
             if (workspaceDir != null && !workspaceDir.isBlank()) {
-                pb.directory(new java.io.File(workspaceDir.trim()));
+                pb.directory(new File(workspaceDir.trim()));
             }
             Process process = pb.start();
             jobLogAppender.append(job.getId(), "[Claude CLI started — agent activity will stream here]");
             new Thread(() -> streamLogs(job.getId(), process), "claude-cli-job-" + job.getId()).start();
             return true;
         } catch (IOException e) {
-            agentLog.error("Failed to start Claude CLI for job {}: {}", job.getId(), e.getMessage(), e);
+            AGENT_LOG.error("Failed to start Claude CLI for job {}: {}", job.getId(), e.getMessage(), e);
             jobLogAppender.append(job.getId(), "Failed to start Claude CLI: " + e.getMessage());
             return false;
         }
     }
 
     private void streamLogs(Long jobId, Process process) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
+        try (BufferedReader reader = new BufferedReader(
+            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+            String line = reader.readLine();
+            while (line != null) {
                 if (!line.isBlank()) {
                     jobLogAppender.append(jobId, line);
                 }
+                line = reader.readLine();
             }
         } catch (IOException e) {
             jobLogAppender.append(jobId, "Claude stream error: " + e.getMessage());
