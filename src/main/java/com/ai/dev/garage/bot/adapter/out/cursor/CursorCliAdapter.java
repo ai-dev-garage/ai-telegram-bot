@@ -12,9 +12,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,7 @@ public class CursorCliAdapter implements AgentTaskRuntime {
     private final CursorCliProperties cursorCliProperties;
     private final JobLogAppender jobLogAppender;
     private final CliWorkspaceResolver workspaceResolver;
+    private final CursorCliModelResolver cursorCliModelResolver;
 
     @Override
     public boolean startForJob(Job job) {
@@ -39,17 +43,31 @@ public class CursorCliAdapter implements AgentTaskRuntime {
         }
         String workspace = workspaceResolver.resolve(job, cursorCliProperties.getWorkspace());
         try {
-            Process process = new ProcessBuilder(
-                "cursor",
-                "agent",
-                "-p",
-                "--force",
-                "--trust",
-                "--workspace",
-                workspace,
-                cursorCliProperties.getPrompt())
-                .redirectErrorStream(true)
-                .start();
+            List<String> cmd = new ArrayList<>();
+            cmd.add(cursorCliProperties.getExecutable());
+            List<String> prefix = cursorCliProperties.getPlanPrefixArgs();
+            if (prefix != null) {
+                for (String segment : prefix) {
+                    if (segment != null && !segment.isBlank()) {
+                        cmd.add(segment.trim());
+                    }
+                }
+            }
+            cmd.add("--print");
+            cmd.add("--force");
+            cmd.add("--trust");
+            cursorCliModelResolver.resolveModelForJob(job).ifPresent(model -> {
+                cmd.add("--model");
+                cmd.add(model);
+            });
+            cmd.add("--workspace");
+            cmd.add(workspace);
+            cmd.add(cursorCliProperties.getPrompt());
+            ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true);
+            if (workspace != null && !workspace.isBlank()) {
+                pb.directory(new File(workspace.trim()));
+            }
+            Process process = pb.start();
             jobLogAppender.append(job.getId(), "[Cursor CLI started — agent activity will stream here]");
             new Thread(() -> streamLogs(job.getId(), process), "cursor-cli-job-" + job.getId()).start();
             return true;

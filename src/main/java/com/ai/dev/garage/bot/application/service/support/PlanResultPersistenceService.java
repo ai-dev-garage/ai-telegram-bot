@@ -7,6 +7,7 @@ import com.ai.dev.garage.bot.application.port.out.PlanSessionResult.ParsedMessag
 import com.ai.dev.garage.bot.application.port.out.PlanSessionResult.ParsedQuestion;
 import com.ai.dev.garage.bot.application.port.out.PlanSessionStore;
 import com.ai.dev.garage.bot.application.service.PlanSessionService.PlanCompletionListener;
+import com.ai.dev.garage.bot.application.service.TodoCompletionHook;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
@@ -18,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,11 +39,17 @@ public class PlanResultPersistenceService {
     private final PlanSessionStore planSessionStore;
     private final JobStore jobStore;
     private final JsonCodec jsonCodec;
+    private final TodoCompletionHook todoCompletionHook;
 
     @Transactional
     public void persistCliResult(long jobId, PlanSessionResult result, PlanCompletionListener listener) {
         PlanSession session = planSessionStore.findByJobId(jobId)
             .orElseThrow(() -> new EntityNotFoundException("No plan session for job " + jobId));
+
+        if (!result.cliHealthy()) {
+            persistCliFailure(jobId, session, result, listener);
+            return;
+        }
 
         if (result.sessionId() != null) {
             session.setCliSessionId(result.sessionId());
@@ -55,6 +64,41 @@ public class PlanResultPersistenceService {
         } else {
             finishPlanReady(session, result, jobId);
             notifyPlanReady(listener, jobId);
+        }
+    }
+
+    private void persistCliFailure(long jobId, PlanSession session, PlanSessionResult result,
+                                   PlanCompletionListener listener) {
+        String detail = result.failureDetail();
+        if (detail == null || detail.isBlank()) {
+            detail = "Plan CLI failed (no detail)";
+        }
+        if (result.sessionId() != null) {
+            session.setCliSessionId(result.sessionId());
+        }
+        session.setPlanText(detail);
+        session.setState(PlanState.FAILED);
+        planSessionStore.save(session);
+
+        Job job = jobStore.findById(jobId).orElse(null);
+        if (job != null) {
+            job.setStatus(JobStatus.FAILED);
+            job.setLastError(detail);
+            job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
+            jobStore.save(job);
+        }
+        todoCompletionHook.onJobFailed(jobId);
+        notifyPlanError(listener, jobId, detail);
+    }
+
+    private static void notifyPlanError(PlanCompletionListener listener, long jobId, String error) {
+        if (listener == null) {
+            return;
+        }
+        try {
+            listener.onPlanError(jobId, error);
+        } catch (Exception e) {
+            log.warn("Plan completion listener error (cli failure) for job {}: {}", jobId, e.getMessage());
         }
     }
 

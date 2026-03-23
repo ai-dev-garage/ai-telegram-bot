@@ -12,6 +12,8 @@ Plan mode lets you iterate on a **PLAN_TASK** job: the external agent asks clari
 4. If there are questions, you get Telegram inline buttons (and optional “type your own answer”). When the round is complete, the runner **resumes** the CLI session with your compiled answers.
 5. When there are no more questions, the plan text is shown; you can **Build** / **Adjust** / **Pause** / etc.
 
+If the plan CLI exits immediately (non-zero exit, or no `stream-json` output), the job is marked **FAILED**, the session state is **FAILED**, and the web UI / job error shows a short reason plus any raw stderr/stdout preview. Typical fix: install the CLI, run `cursor agent --help` from the same environment as the runner, or set **`CURSOR_CLI_BIN`** to an absolute path (see [agent-cursor.md](agent-cursor.md)).
+
 ## Export directory
 
 On **Build** or **Pause**, a **`.plan.md`** file is written under **`PLANS_EXPORT_DIR`** (default `~/.ai-dev-garage/plans`). Point your IDE or agent at this file if you use Cursor-style plan markdown workflows.

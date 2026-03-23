@@ -12,6 +12,7 @@ import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.PlanState;
+import com.ai.dev.garage.bot.domain.Requester;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -57,6 +58,14 @@ class PlanSessionServiceTest {
         service = new PlanSessionService(
             jobStore, planSessionStore, planCliRuntime, jsonCodec,
             allowedPathValidator, todoCompletionHook, planFileExporter, planResultPersistenceService);
+    }
+
+    @Test
+    void shouldThrowWhenCreatePlanWithBlankIntent() {
+        var requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
+        assertThatThrownBy(() -> service.createPlan("  ", requester, "/tmp", null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("empty");
     }
 
     private static PlanSession readySession(long id, long jobId) {

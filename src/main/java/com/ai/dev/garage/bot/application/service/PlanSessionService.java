@@ -7,18 +7,16 @@ import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.application.port.out.PlanCliRuntime;
 import com.ai.dev.garage.bot.application.port.out.PlanSessionResult;
 import com.ai.dev.garage.bot.application.port.out.PlanSessionStore;
+import com.ai.dev.garage.bot.application.service.support.PlanCreateSupport;
 import com.ai.dev.garage.bot.application.service.support.PlanResultPersistenceService;
 import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
 import com.ai.dev.garage.bot.application.support.ContentLengthLimits;
-import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.PlanState;
 import com.ai.dev.garage.bot.domain.Requester;
-import com.ai.dev.garage.bot.domain.RiskLevel;
-import com.ai.dev.garage.bot.domain.TaskType;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,35 +66,11 @@ public class PlanSessionService implements PlanManagement {
 
     @Override
     @Transactional
-    public Job createPlan(String intent, Requester requester, String workspace) {
-        if (workspace != null && !workspace.isBlank()) {
-            String reason = allowedPathValidator.validationFailureReason(workspace.trim());
-            if (reason != null) {
-                throw new IllegalArgumentException(reason);
-            }
-        }
-
-        Map<String, Object> payload = new HashMap<>();
-        if (workspace != null && !workspace.isBlank()) {
-            payload.put("workspace", workspace.trim());
-        }
-        payload.put("input", intent);
-
-        Job job = Job.builder()
-            .intent(intent)
-            .requester(Requester.builder()
-                .telegramUserId(requester.getTelegramUserId())
-                .telegramChatId(requester.getTelegramChatId())
-                .telegramUsername(requester.getTelegramUsername())
-                .build())
-            .taskType(TaskType.PLAN_TASK)
-            .riskLevel(RiskLevel.LOW)
-            .approvalState(ApprovalState.APPROVED)
-            .status(JobStatus.RUNNING)
-            .taskPayloadJson(jsonCodec.toJson(payload))
-            .startedAt(OffsetDateTime.now(ZoneId.systemDefault()))
-            .build();
-        job = jobStore.save(job);
+    public Job createPlan(String intent, Requester requester, String workspace, String cliModelOverride) {
+        PlanCreateSupport.validatePlanIntent(intent);
+        PlanCreateSupport.validatePlanWorkspaceIfPresent(workspace, allowedPathValidator);
+        Map<String, Object> payload = PlanCreateSupport.buildPlanTaskPayload(intent, workspace, cliModelOverride);
+        Job job = jobStore.save(PlanCreateSupport.buildNewPlanJobEntity(jsonCodec, intent, requester, payload));
 
         var session = PlanSession.builder()
             .jobId(job.getId())
@@ -105,8 +79,7 @@ public class PlanSessionService implements PlanManagement {
         planSessionStore.save(session);
 
         long jobId = job.getId();
-        String prompt = intent;
-        submitAfterCommit(() -> executePlanRound(jobId, prompt, null));
+        submitAfterCommit(() -> executePlanRound(jobId, intent, null));
 
         log.info("Plan job {} created, CLI starting async", jobId);
         return job;

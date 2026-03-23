@@ -1,8 +1,11 @@
 package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,15 +26,19 @@ public class TelegramCommandRegistry {
 
     private final List<TelegramCommand> commands;
 
+    /**
+     * Payload for Telegram {@code setMyCommands}: stable {@link LinkedHashMap} entries ({@code command} then
+     * {@code description}) and handler beans sorted by {@link org.springframework.core.annotation.Order}.
+     */
     public List<Map<String, String>> botApiCommands() {
-        return commands.stream()
+        return sortedCommands().stream()
             .flatMap(c -> c.botCommands().stream())
-            .map(bc -> Map.of("command", bc.command(), "description", bc.menuDescription()))
+            .map(TelegramCommandRegistry::toBotCommandMap)
             .toList();
     }
 
     public String helpText() {
-        String body = commands.stream()
+        String body = sortedCommands().stream()
             .flatMap(c -> c.helpLines().stream())
             .collect(Collectors.joining("\n"));
         return HEADER + "\n\n" + body;
@@ -39,5 +46,18 @@ public class TelegramCommandRegistry {
 
     public String unknownInputText() {
         return "Unknown command or message.\n\n" + helpText();
+    }
+
+    private List<TelegramCommand> sortedCommands() {
+        List<TelegramCommand> sorted = new ArrayList<>(commands);
+        sorted.sort(AnnotationAwareOrderComparator.INSTANCE);
+        return sorted;
+    }
+
+    private static Map<String, String> toBotCommandMap(TelegramCommand.BotCommandInfo bc) {
+        Map<String, String> row = new LinkedHashMap<>(2);
+        row.put("command", bc.command());
+        row.put("description", bc.menuDescription());
+        return row;
     }
 }

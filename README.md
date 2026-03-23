@@ -27,6 +27,7 @@ docker compose up -d
 | **[docs/screenshots-web-ui.md](docs/screenshots-web-ui.md)** | Web UI screenshots |
 | **[docs/screenshots-telegram.md](docs/screenshots-telegram.md)** | Telegram screenshots |
 | **[docs/agent-cursor.md](docs/agent-cursor.md)** | Cursor CLI + env |
+| **[docs/agent-models-reference.md](docs/agent-models-reference.md)** | Illustrative model ids + Telegram aliases |
 | **[docs/agent-claude.md](docs/agent-claude.md)** | Claude Code CLI + env |
 | **[config.example.env](config.example.env)** | Environment variable templates |
 | **[`.agent/README.md`](.agent/README.md)** | Agent handoff assets, local dev, architecture |
@@ -41,6 +42,8 @@ docker compose up -d
 
 Set **`AGENT_RUNTIME=cursor`** (default) or **`claude`** in `.env`. Use the same family for `./scripts/install-user-agent-integration.sh --agent …` and `./scripts/install-dev-agent-assets.sh --target …`.
 
+For **plan mode** with Cursor, if the runner logs `exitCode=1` and an empty plan, the JVM often does not see the same **`PATH`** as your terminal. Set **`CURSOR_CLI_BIN`** to the full path of the `cursor` executable (see [config.example.env](config.example.env) and [docs/agent-cursor.md](docs/agent-cursor.md)).
+
 ```bash
 ./scripts/run-telegram-runner-local.sh
 ./scripts/run-telegram-runner-local.sh --agent claude
@@ -51,7 +54,7 @@ Details: [docs/agent-cursor.md](docs/agent-cursor.md), [docs/agent-claude.md](do
 ## Telegram commands (overview)
 
 - **Navigation:** `/nav`, `/ls`, `/cd`, `/pwd` (needs `ALLOWED_NAVIGATION_PATHS` for cwd picker)
-- **Agent:** `/agent …`, `/run …`
+- **Agent:** `/agent …`, `/run …`, **`/models`** (list Cursor CLI model ids for `telegram-model-aliases`)
 - **Todos:** `/todo`, `/todos`, `/todo work …`
 - **Plans:** `/plan`, `/plans` — inline Build / Adjust / Pause / Resume / Cancel; see [docs/plan-mode.md](docs/plan-mode.md)
 - **Jobs:** `/status`, `/logs`, `/approve`, `/reject`, `/cancel`

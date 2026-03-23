@@ -29,8 +29,10 @@ class CliStreamParserTest {
         assertThat(result.sessionId()).isEqualTo("sess-cursor");
         assertThat(result.assistantMessages()).containsExactly("What stack?");
         assertThat(result.fullText()).isEqualTo("What stack?");
+        assertThat(result.resultLineSeen()).isTrue();
         assertThat(result.success()).isTrue();
         assertThat(result.durationMs()).isEqualTo(42);
+        assertThat(result.unparseablePreview()).isEmpty();
     }
 
     @Test
@@ -71,6 +73,30 @@ class CliStreamParserTest {
         var result = parser.parse(stream(ndjson));
         assertThat(result.assistantMessages()).containsExactly("Part1", "Part2");
         assertThat(result.fullText()).isEqualTo("Part1Part2");
+    }
+
+    @Test
+    void collectsUnparseableLinesInPreview() {
+        String ndjson = """
+            not valid json
+            {"type":"assistant","session_id":"s1","message":{"content":[{"type":"text","text":"Hi"}]}}
+            {"type":"result","subtype":"success","session_id":"s1"}
+            """;
+        var result = parser.parse(stream(ndjson));
+        assertThat(result.unparseablePreview()).contains("not valid json");
+        assertThat(result.assistantMessages()).containsExactly("Hi");
+        assertThat(result.resultLineSeen()).isTrue();
+    }
+
+    @Test
+    void resultSubtypeErrorMarksStreamUnsuccessful() {
+        String ndjson = """
+            {"type":"assistant","message":{"content":[{"type":"text","text":"oops"}]}}
+            {"type":"result","subtype":"error"}
+            """;
+        var result = parser.parse(stream(ndjson));
+        assertThat(result.resultLineSeen()).isTrue();
+        assertThat(result.success()).isFalse();
     }
 
     private static ByteArrayInputStream stream(String s) {

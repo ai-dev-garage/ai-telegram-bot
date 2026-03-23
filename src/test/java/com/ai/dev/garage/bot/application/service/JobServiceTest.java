@@ -2,6 +2,7 @@ package com.ai.dev.garage.bot.application.service;
 
 import com.ai.dev.garage.bot.application.port.in.support.IntentClassification;
 import com.ai.dev.garage.bot.application.port.in.support.JobLifecycle;
+import com.ai.dev.garage.bot.adapter.out.cursor.CursorCliModelResolver;
 import com.ai.dev.garage.bot.application.port.out.JobStore;
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
@@ -161,6 +162,35 @@ class JobServiceTest {
         jobService.createJob("agent do something", requester, "/projects/app");
 
         assertThat(payloadCaptor.getValue().get("workspace")).isEqualTo("/projects/app");
+    }
+
+    @Test
+    void shouldMergeCliModelIntoPayloadWhenAgentTaskAndOverrideProvided() {
+        var requester = Requester.builder().telegramUserId(1L).telegramChatId(2L).build();
+        var classified = new ClassificationResult(
+            TaskType.AGENT_TASK,
+            Map.of(
+                "agent_or_command", "agent",
+                "input", "do something",
+                "context", Map.of()),
+            RiskLevel.MEDIUM,
+            ApprovalState.APPROVED
+        );
+        when(intentClassification.classify("agent do something")).thenReturn(classified);
+        when(allowedPathValidator.validationFailureReason("/projects/app")).thenReturn(null);
+        when(jobStore.save(any(Job.class))).thenAnswer(inv -> {
+            Job j = inv.getArgument(0);
+            j.setId(101L);
+            return j;
+        });
+        when(jobLifecycle.finalizeNewJob(any(Job.class), eq(classified))).thenReturn(new JobLifecycle.FinalizeOutcome(null));
+
+        ArgumentCaptor<Map<String, Object>> payloadCaptor = ArgumentCaptor.forClass(Map.class);
+        when(jsonCodec.toJson(payloadCaptor.capture())).thenReturn("{}");
+
+        jobService.createJob("agent do something", requester, "/projects/app", "cli-model-z");
+
+        assertThat(payloadCaptor.getValue().get(CursorCliModelResolver.CLI_MODEL_PAYLOAD_KEY)).isEqualTo("cli-model-z");
     }
 
     @Test

@@ -7,6 +7,7 @@ import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
 import com.ai.dev.garage.bot.application.port.in.JobManagement;
 import com.ai.dev.garage.bot.config.RunnerProperties;
 import com.ai.dev.garage.bot.domain.Job;
+import com.ai.dev.garage.bot.domain.Requester;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,8 +16,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,7 +50,7 @@ class RunCommandTest {
     @Test
     void shouldSendClassifyingMessageWithCursorHintWhenAgentRuntimeIsCursor() {
         Job job = mock(Job.class);
-        when(jobManagement.createJob(any(), any(), any())).thenReturn(job);
+        when(jobManagement.createJob(anyString(), any(Requester.class), nullable(String.class))).thenReturn(job);
         when(jobResponseMapper.toResponse(any(Job.class))).thenReturn(JobResponse.builder()
             .jobId("7")
             .status("queued")
@@ -66,7 +69,7 @@ class RunCommandTest {
     void shouldSendClaudeHintWhenAgentRuntimeIsClaude() {
         runnerProperties.setAgentRuntime("claude");
         Job job = mock(Job.class);
-        when(jobManagement.createJob(any(), any(), any())).thenReturn(job);
+        when(jobManagement.createJob(anyString(), any(Requester.class), nullable(String.class))).thenReturn(job);
         when(jobResponseMapper.toResponse(any(Job.class))).thenReturn(JobResponse.builder()
             .jobId("3")
             .status("queued")

@@ -13,7 +13,16 @@ public interface JobManagement {
      * @param preferredShellCwd optional cwd for {@link com.ai.dev.garage.bot.domain.TaskType#SHELL_COMMAND} jobs
      *                          (e.g. from Telegram navigation); must pass allowlist at execution time
      */
-    Job createJob(String intent, Requester requester, String preferredShellCwd);
+    default Job createJob(String intent, Requester requester, String preferredShellCwd) {
+        return createJob(intent, requester, preferredShellCwd, null);
+    }
+
+    /**
+     * Creates a job with an optional Cursor CLI model override for agent tasks.
+     *
+     * @param cliModelOverride when non-blank, merged into AGENT_TASK payload as {@code cliModel} for Cursor
+     */
+    Job createJob(String intent, Requester requester, String preferredShellCwd, String cliModelOverride);
 
     Job getJob(String idOrLast);
 

@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import reactor.core.publisher.Mono;
 
@@ -163,9 +164,13 @@ public class TelegramBotClient {
                 Object okField = res != null ? res.get("ok") : null;
                 boolean ok = isJsonBooleanTrue(okField);
                 if (!ok) {
-                    LOG.warn("Telegram setMyCommands ok=false body={}", res);
+                    LOG.warn("Telegram setMyCommands ok=false description={} body={}",
+                        res != null ? res.get("description") : null, res);
                 } else {
-                    LOG.info("Telegram setMyCommands registered {} commands", commands.size());
+                    String names = commands.stream()
+                        .map(c -> c.get("command"))
+                        .collect(Collectors.joining(", "));
+                    LOG.info("Telegram setMyCommands registered {} commands: {}", commands.size(), names);
                 }
             })
             .doOnError(ex -> LOG.warn("Telegram setMyCommands failed: {}", ex.getMessage()))

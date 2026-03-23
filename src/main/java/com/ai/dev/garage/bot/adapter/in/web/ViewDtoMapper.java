@@ -70,7 +70,8 @@ public class ViewDtoMapper {
         PlanState.PAUSED, "bg-orange-500 text-white",
         PlanState.APPROVED, "bg-emerald-600 text-white",
         PlanState.REJECTED, "bg-red-500 text-white",
-        PlanState.CANCELLED, "bg-gray-600 text-white"
+        PlanState.CANCELLED, "bg-gray-600 text-white",
+        PlanState.FAILED, "bg-red-700 text-white"
     );
 
     private final JsonCodec jsonCodec;

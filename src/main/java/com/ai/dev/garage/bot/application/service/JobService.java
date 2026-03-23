@@ -1,5 +1,6 @@
 package com.ai.dev.garage.bot.application.service;
 
+import com.ai.dev.garage.bot.adapter.out.cursor.CursorCliModelResolver;
 import com.ai.dev.garage.bot.application.port.in.JobManagement;
 import com.ai.dev.garage.bot.application.port.in.support.IntentClassification;
 import com.ai.dev.garage.bot.application.port.in.support.JobLifecycle;
@@ -42,24 +43,12 @@ public class JobService implements JobManagement {
 
     @Override
     @Transactional
-    public Job createJob(String intent, Requester requester, String preferredShellCwd) {
+    public Job createJob(String intent, Requester requester, String preferredShellCwd, String cliModelOverride) {
         ClassificationResult classified = intentClassification.classify(intent);
         Map<String, Object> payload = new HashMap<>(classified.taskPayload());
-        if (classified.taskType() == TaskType.SHELL_COMMAND
-            && preferredShellCwd != null
-            && !preferredShellCwd.isBlank()) {
-            payload.put("cwd", preferredShellCwd.trim());
-        }
-        if (classified.taskType() == TaskType.AGENT_TASK
-            && preferredShellCwd != null
-            && !preferredShellCwd.isBlank()) {
-            String ws = preferredShellCwd.trim();
-            String reason = allowedPathValidator.validationFailureReason(ws);
-            if (reason != null) {
-                throw new IllegalArgumentException(reason);
-            }
-            payload.put("workspace", ws);
-        }
+        mergeShellCwdIntoPayload(classified.taskType(), preferredShellCwd, payload);
+        mergeAgentWorkspaceIntoPayload(classified.taskType(), preferredShellCwd, payload);
+        mergeCliModelIntoPayload(classified.taskType(), cliModelOverride, payload);
         String storedIntent = storedIntent(intent, classified);
         var entity = Job.builder()
             .intent(storedIntent)
@@ -77,6 +66,36 @@ public class JobService implements JobManagement {
         }
         log.debug("Job created id={} taskType={} status={}", saved.getId(), saved.getTaskType(), saved.getStatus());
         return saved;
+    }
+
+    private static void mergeShellCwdIntoPayload(TaskType taskType, String preferredShellCwd, Map<String, Object> payload) {
+        if (taskType == TaskType.SHELL_COMMAND
+            && preferredShellCwd != null
+            && !preferredShellCwd.isBlank()) {
+            payload.put("cwd", preferredShellCwd.trim());
+        }
+    }
+
+    private void mergeAgentWorkspaceIntoPayload(TaskType taskType, String preferredShellCwd, Map<String, Object> payload) {
+        if (taskType != TaskType.AGENT_TASK
+            || preferredShellCwd == null
+            || preferredShellCwd.isBlank()) {
+            return;
+        }
+        String ws = preferredShellCwd.trim();
+        String reason = allowedPathValidator.validationFailureReason(ws);
+        if (reason != null) {
+            throw new IllegalArgumentException(reason);
+        }
+        payload.put("workspace", ws);
+    }
+
+    private static void mergeCliModelIntoPayload(TaskType taskType, String cliModelOverride, Map<String, Object> payload) {
+        if (taskType == TaskType.AGENT_TASK
+            && cliModelOverride != null
+            && !cliModelOverride.isBlank()) {
+            payload.put(CursorCliModelResolver.CLI_MODEL_PAYLOAD_KEY, cliModelOverride.trim());
+        }
     }
 
     private static String storedIntent(String rawIntent, ClassificationResult classified) {

@@ -105,7 +105,7 @@ Health: **`GET /actuator/health`**.
 | Area | Commands |
 |------|----------|
 | Navigation | `/nav`, `/ls`, `/cd`, `/pwd` |
-| Agent | `/agent`, `/agent @folder` |
+| Agent | `/agent`, `/agent @folder`, **`/models`** (Cursor CLI model ids) |
 | Todos | `/todo`, `/todos`, `/todo work`, etc. |
 | Plans | `/plan`, `/plans`, inline Build/Adjust/Pause/Resume/Cancel |
 | Jobs | `/run`, `/status`, `/logs`, `/approve`, `/reject`, `/cancel` |
