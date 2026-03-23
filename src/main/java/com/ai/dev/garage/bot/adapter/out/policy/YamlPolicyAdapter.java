@@ -2,16 +2,19 @@ package com.ai.dev.garage.bot.adapter.out.policy;
 
 import com.ai.dev.garage.bot.application.port.out.PolicyProvider;
 import com.ai.dev.garage.bot.config.RunnerProperties;
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import org.springframework.core.io.ClassPathResource;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.yaml.snakeyaml.Yaml;
 
 @Slf4j
 @Service
@@ -21,7 +24,7 @@ public class YamlPolicyAdapter implements PolicyProvider {
     private final Yaml yaml = new Yaml();
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // SnakeYAML load returns a graph without generic types
     public Map<String, Object> loadPolicy() {
         String policyPath = runnerProperties.getPolicyPath();
         if (policyPath != null && !policyPath.isBlank()) {
@@ -32,7 +35,7 @@ public class YamlPolicyAdapter implements PolicyProvider {
             }
         }
         try {
-            ClassPathResource resource = new ClassPathResource("policy-tiers.yaml");
+            var resource = new ClassPathResource("policy-tiers.yaml");
             return yaml.load(resource.getInputStream());
         } catch (IOException e) {
             log.warn("Using embedded default policy (classpath policy-tiers.yaml unavailable): {}", e.getMessage());

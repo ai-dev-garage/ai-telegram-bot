@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude all OpenAPI generated classes -->
+    <Match>
+        <Package name="~.*\.web\.rest\.gen\..*"/>
+    </Match>
+    
+    <!-- Exclude generated model classes -->
+    <Match>
+        <Package name="~.*\.gen\.model\..*"/>
+    </Match>
+    
+    <!-- Exclude generated API classes -->
+    <Match>
+        <Package name="~.*\.gen\.api\..*"/>
+    </Match>
+    
+    <!-- Disabled project-wide: Spring/Lombok ctor injection triggers this on most beans; low signal here. -->
+    <Match>
+        <Class name="~.*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Exclude JPA entities from EI_EXPOSE_REP (mutable getters / exposure patterns) -->
+    <Match>
+        <Class name="~.*\.domain\..*"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+
+    <!-- Exclude simple transport models from EI_EXPOSE_REP noise -->
+    <Match>
+        <Class name="~.*\.model\..*"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+
+    <!--
+      EI_EXPOSE_REP: getters / accessors expose mutable collections or buffers by design (REST DTOs, Thymeleaf
+      view models, CLI parse state, plan session records, Spring Boot config list properties).
+      Use Class (not Package …\..*) so leaf packages like …dto and …port.out match.
+    -->
+    <Match>
+        <Class name="~com\.ai\.dev\.garage\.bot\.adapter\.in\.rest\.dto\..+"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="~com\.ai\.dev\.garage\.bot\.adapter\.in\.web\.dto\..+"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="~com\.ai\.dev\.garage\.bot\.adapter\.out\.cursor\..+"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="~com\.ai\.dev\.garage\.bot\.application\.port\.out\..+"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Class name="~com\.ai\.dev\.garage\.bot\.config\..+"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+
+    <!-- Exclude Spring Boot configuration classes from DI checks -->
+    <Match>
+        <Class name="~.*Configuration.*"/>
+        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
+    </Match>
+    
+    <!-- Exclude test classes from various checks that are acceptable in test code -->
+    <Match>
+        <Class name="~.*Test.*"/>
+        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME,PATH_TRAVERSAL_IN,HARD_CODE_PASSWORD,UNSAFE_HASH_EQUALS,VA_FORMAT_STRING_USES_NEWLINE,NP_NONNULL_PARAM_VIOLATION"/>
+    </Match>
+
+</FindBugsFilter>

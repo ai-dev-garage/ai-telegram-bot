@@ -1,10 +1,11 @@
 package com.ai.dev.garage.bot.adapter.in.telegram;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 /**
  * Tracks when a Telegram chat is expecting a free-text answer to a plan question

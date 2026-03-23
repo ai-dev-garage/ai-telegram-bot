@@ -1,11 +1,13 @@
 package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
-import java.util.List;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @Order(10)
@@ -21,7 +23,7 @@ public class StartCommand implements TelegramCommand {
      * copy {@code @Lazy} onto the generated constructor).
      */
     public StartCommand(
-            TelegramBotClient telegramBotClient, @Lazy TelegramCommandRegistry commandRegistry) {
+        TelegramBotClient telegramBotClient, @Lazy TelegramCommandRegistry commandRegistry) {
         this.telegramBotClient = telegramBotClient;
         this.commandRegistry = commandRegistry;
     }

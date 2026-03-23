@@ -4,19 +4,24 @@ import com.ai.dev.garage.bot.adapter.out.cursor.AgentTaskSigner;
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.config.RunnerProperties;
 import com.ai.dev.garage.bot.domain.Job;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
 import jakarta.annotation.PostConstruct;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 /**
  * Writes pending JSON task files for the active {@link com.ai.dev.garage.bot.domain.TaskType#AGENT_TASK} handoff.
@@ -26,7 +31,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AgentTaskFileWriter {
 
-    private static final Logger agentLog = LoggerFactory.getLogger("com.ai.dev.garage.bot.agent");
+    private static final Logger AGENT_LOG = LoggerFactory.getLogger("com.ai.dev.garage.bot.agent");
 
     private final RunnerProperties runnerProperties;
     private final JsonCodec jsonCodec;
@@ -42,7 +47,7 @@ public class AgentTaskFileWriter {
             Files.createDirectories(pendingDir());
             Files.createDirectories(resultsDir());
         } catch (IOException e) {
-            agentLog.error("Failed to create agent-tasks directories: {}", e.getMessage(), e);
+            AGENT_LOG.error("Failed to create agent-tasks directories: {}", e.getMessage(), e);
         }
     }
 
@@ -57,7 +62,7 @@ public class AgentTaskFileWriter {
             String agentHint = String.valueOf(jsonCodec.fromJson(job.getTaskPayloadJson()).getOrDefault("agent_or_command", ""));
             String jobId = String.valueOf(job.getId());
             String nonce = UUID.randomUUID().toString();
-            String issuedAt = OffsetDateTime.now().toString();
+            String issuedAt = OffsetDateTime.now(ZoneId.systemDefault()).toString();
             Map<String, Object> jobPayload = jsonCodec.fromJson(job.getTaskPayloadJson());
             Object workspace = jobPayload.get("workspace");
             Map<String, Object> payload = new LinkedHashMap<>();
@@ -74,14 +79,23 @@ public class AgentTaskFileWriter {
                 normalizedWorkspace = ws.trim();
                 payload.put("workspace", normalizedWorkspace);
             }
-            agentTaskSigner.signPayload(jobId, agentHint, createdAt, intentBody, nonce, issuedAt, normalizedWorkspace).ifPresent(sig -> {
+            var signPayload = new AgentTaskSigner.SignPayload(
+                jobId,
+                agentHint,
+                createdAt,
+                intentBody,
+                nonce,
+                issuedAt,
+                normalizedWorkspace
+            );
+            agentTaskSigner.signPayload(signPayload).ifPresent(sig -> {
                 payload.put("algo", "HMAC-SHA256");
                 payload.put("signature", sig);
             });
             Files.writeString(taskFile, jsonCodec.toJson(payload));
             log.debug("Wrote agent task file: {}", taskFile);
         } catch (Exception e) {
-            agentLog.error("Failed to write agent task file for job {}: {}", job.getId(), e.getMessage(), e);
+            AGENT_LOG.error("Failed to write agent task file for job {}: {}", job.getId(), e.getMessage(), e);
         }
     }
 

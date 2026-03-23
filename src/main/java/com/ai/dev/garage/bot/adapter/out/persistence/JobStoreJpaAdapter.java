@@ -5,11 +5,14 @@ import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.TaskType;
-import java.util.List;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

@@ -1,11 +1,5 @@
 package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.ai.dev.garage.bot.adapter.in.telegram.NavigationStateStore;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
 import com.ai.dev.garage.bot.application.port.in.TodoManagement;
@@ -14,12 +8,20 @@ import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoSource;
 import com.ai.dev.garage.bot.domain.TodoStatus;
-import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TodoCommandTest {
@@ -41,7 +43,7 @@ class TodoCommandTest {
 
     @Test
     void shouldCreateTodoWhenTextProvided() {
-        Todo created = Todo.builder().id(1L).title("Buy milk").source(TodoSource.TELEGRAM).build();
+        var created = Todo.builder().id(1L).title("Buy milk").source(TodoSource.TELEGRAM).build();
         when(todoManagement.createTodo(eq("Buy milk"), eq(null), eq(TodoSource.TELEGRAM),
             any(Requester.class), eq(null)))
             .thenReturn(created);
@@ -55,7 +57,7 @@ class TodoCommandTest {
 
     @Test
     void shouldListTodosOnSlashTodos() {
-        Todo todo = Todo.builder().id(5L).title("Task").status(TodoStatus.OPEN)
+        var todo = Todo.builder().id(5L).title("Task").status(TodoStatus.OPEN)
             .source(TodoSource.WEB).build();
         when(todoManagement.listTodos(null, 20)).thenReturn(List.of(todo));
 
@@ -90,7 +92,7 @@ class TodoCommandTest {
 
     @Test
     void shouldShowDetailWhenIdProvided() {
-        Todo todo = Todo.builder().id(7L).title("Detail task").status(TodoStatus.OPEN)
+        var todo = Todo.builder().id(7L).title("Detail task").status(TodoStatus.OPEN)
             .source(TodoSource.TELEGRAM).build();
         when(todoManagement.getTodo(7)).thenReturn(todo);
 
@@ -102,7 +104,7 @@ class TodoCommandTest {
 
     @Test
     void shouldHandleWorkCallback() {
-        Job job = Job.builder().id(50L).build();
+        var job = Job.builder().id(50L).build();
         when(todoManagement.workOn(1, "agent", null)).thenReturn(job);
 
         todoCommand.handleWorkCallback(10L, 20L, 1, "agent");
@@ -130,7 +132,7 @@ class TodoCommandTest {
     @Test
     void shouldIncludeWorkspaceWhenNavSelected() {
         navigationStateStore.setSelectedPath(10L, 20L, "/my/workspace");
-        Todo created = Todo.builder().id(2L).title("Work").source(TodoSource.TELEGRAM).build();
+        var created = Todo.builder().id(2L).title("Work").source(TodoSource.TELEGRAM).build();
         when(todoManagement.createTodo(eq("Work"), eq(null), eq(TodoSource.TELEGRAM),
             any(Requester.class), eq("/my/workspace")))
             .thenReturn(created);

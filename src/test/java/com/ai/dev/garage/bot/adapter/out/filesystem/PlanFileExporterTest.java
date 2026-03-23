@@ -1,22 +1,26 @@
 package com.ai.dev.garage.bot.adapter.out.filesystem;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.ai.dev.garage.bot.config.RunnerProperties;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.PlanState;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class PlanFileExporterTest {
 
@@ -42,7 +46,7 @@ class PlanFileExporterTest {
             .build();
     }
 
-    private Job jobWithWorkspace(long id, String intent, String workspace) {
+    private static Job jobWithWorkspace(long id, String intent, String workspace) {
         Job job = testJob(id, intent);
         job.setTaskPayloadJson("{\"workspace\":\"" + workspace + "\",\"input\":\"" + intent + "\"}");
         return job;
@@ -92,15 +96,15 @@ class PlanFileExporterTest {
         void shouldIncludeQaHistoryGroupedByRound() throws IOException {
             Job job = testJob(42L, "Build auth");
             PlanSession session = testSession(PlanState.PLAN_READY, "Plan text here.");
-            List<PlanQuestion> questions = List.of(
+            var questions = List.of(
                 testQuestion(session, 1, 1, "What auth provider?", "OAuth2"),
                 testQuestion(session, 1, 2, "Multi-tenant?", "Yes"),
                 testQuestion(session, 2, 1, "Support MFA?", "TOTP only")
             );
 
-            String path = exporter.exportPlan(job, session, questions);
+            var path = exporter.exportPlan(job, session, questions);
 
-            String content = Files.readString(Path.of(path));
+            var content = Files.readString(Path.of(path));
             assertThat(content).contains("## Q&A History");
             assertThat(content).contains("### Round 1");
             assertThat(content).contains("**Q1**: What auth provider?");
@@ -115,13 +119,13 @@ class PlanFileExporterTest {
         void shouldHandleUnansweredQuestions() throws IOException {
             Job job = testJob(7L, "Plan something");
             PlanSession session = testSession(PlanState.PAUSED, "Draft plan.");
-            List<PlanQuestion> questions = List.of(
+            var questions = List.of(
                 testQuestion(session, 1, 1, "Open question?", null)
             );
 
-            String path = exporter.exportPlan(job, session, questions);
+            var path = exporter.exportPlan(job, session, questions);
 
-            String content = Files.readString(Path.of(path));
+            var content = Files.readString(Path.of(path));
             assertThat(content).contains("**A**: (unanswered)");
         }
 
@@ -133,7 +137,9 @@ class PlanFileExporterTest {
             String path = exporter.exportPlan(job, session, List.of());
 
             assertThat(path).isNotNull();
-            String filename = Path.of(path).getFileName().toString();
+            String filename = Optional.ofNullable(Path.of(path).getFileName())
+                .map(Path::toString)
+                .orElseThrow(() -> new AssertionError("expected file name segment"));
             assertThat(filename).startsWith("plan_build-a-rest-api-for-user-management");
             assertThat(filename).endsWith(".plan.md");
         }

@@ -1,18 +1,10 @@
 package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-
 import com.ai.dev.garage.bot.adapter.in.telegram.NavigationStateStore;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
 import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
 import com.ai.dev.garage.bot.config.RunnerProperties;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +12,16 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class LsCommandTest {
@@ -38,7 +39,7 @@ class LsCommandTest {
     @BeforeEach
     void setUp() {
         navigationStateStore = new NavigationStateStore();
-        RunnerProperties props = new RunnerProperties();
+        var props = new RunnerProperties();
         props.setAllowedNavigationPaths(tempDir.toString());
         allowedPathValidator = new AllowedPathValidator(props);
         lsCommand = new LsCommand(telegramBotClient, navigationStateStore, allowedPathValidator);
@@ -60,8 +61,8 @@ class LsCommandTest {
 
     @Test
     void shouldShowSubdirectoriesAsButtons() throws Exception {
-        Path sub1 = Files.createDirectory(tempDir.resolve("alpha"));
-        Path sub2 = Files.createDirectory(tempDir.resolve("beta"));
+        Files.createDirectory(tempDir.resolve("alpha"));
+        Files.createDirectory(tempDir.resolve("beta"));
         Files.createFile(tempDir.resolve("file.txt"));
         Files.createDirectory(tempDir.resolve(".hidden"));
 

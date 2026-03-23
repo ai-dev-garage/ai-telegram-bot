@@ -1,6 +1,7 @@
-package com.ai.dev.garage.bot.adapter.in.telegram.command;
+package com.ai.dev.garage.bot.adapter.in.telegram.command.support;
 
 import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -19,6 +21,9 @@ public final class DirectoryListingHelper {
 
     public static final String CD_CALLBACK_PREFIX = "cd:";
     public static final String CD_UP = "cd:..";
+
+    /** Telegram inline callback_data max length (bytes). */
+    private static final int TELEGRAM_CALLBACK_DATA_MAX_LEN = 64;
 
     private static final Set<String> SKIP_DIR_NAMES = Set.of(
         ".git", "node_modules", "target", "build", "dist", ".gradle", ".idea");
@@ -54,7 +59,7 @@ public final class DirectoryListingHelper {
         List<List<Map<String, String>>> keyboard = new ArrayList<>();
         for (String name : children) {
             String callbackData = CD_CALLBACK_PREFIX + name;
-            if (callbackData.length() > 64) {
+            if (callbackData.length() > TELEGRAM_CALLBACK_DATA_MAX_LEN) {
                 continue;
             }
             keyboard.add(List.of(button(name, callbackData)));
@@ -67,7 +72,9 @@ public final class DirectoryListingHelper {
     }
 
     public static String formatCwdMessage(String canonicalPath) {
-        String folderName = Path.of(canonicalPath).getFileName().toString();
+        String folderName = Optional.ofNullable(Path.of(canonicalPath).getFileName())
+            .map(Path::toString)
+            .orElse(canonicalPath);
         return "Current: " + folderName + "\n\nSubfolders:";
     }
 

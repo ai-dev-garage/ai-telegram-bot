@@ -1,15 +1,5 @@
 package com.ai.dev.garage.bot.adapter.in.rest;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.ai.dev.garage.bot.adapter.in.rest.dto.CreateTodoRequest;
 import com.ai.dev.garage.bot.adapter.in.rest.dto.TodoResponse;
 import com.ai.dev.garage.bot.adapter.in.rest.dto.UpdateTodoRequest;
@@ -18,8 +8,7 @@ import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoSource;
 import com.ai.dev.garage.bot.domain.TodoStatus;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,6 +18,20 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = TodoController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -53,7 +56,7 @@ class TodoControllerTest {
 
     @Test
     void shouldReturnTodosWhenListTodos() throws Exception {
-        Todo todo = Todo.builder()
+        var todo = Todo.builder()
             .id(1L).title("Test").status(TodoStatus.OPEN).source(TodoSource.WEB).build();
         when(todoManagement.listTodos(isNull(), eq(50), eq("createdAt"), eq("desc")))
             .thenReturn(List.of(todo));
@@ -68,10 +71,10 @@ class TodoControllerTest {
 
     @Test
     void shouldReturnCreatedWhenCreateTodo() throws Exception {
-        CreateTodoRequest req = new CreateTodoRequest();
+        var req = new CreateTodoRequest();
         req.setTitle("New todo");
 
-        Todo created = Todo.builder()
+        var created = Todo.builder()
             .id(5L).title("New todo").status(TodoStatus.OPEN).source(TodoSource.WEB).build();
         when(todoManagement.createTodo(eq("New todo"), isNull(), eq(TodoSource.WEB),
             any(Requester.class), isNull()))
@@ -96,7 +99,7 @@ class TodoControllerTest {
 
     @Test
     void shouldReturnTodoWhenGetById() throws Exception {
-        Todo todo = Todo.builder()
+        var todo = Todo.builder()
             .id(3L).title("Detail").status(TodoStatus.OPEN).source(TodoSource.WEB).build();
         when(todoManagement.getTodo(3)).thenReturn(todo);
         when(todoResponseMapper.toResponse(todo))
@@ -109,10 +112,10 @@ class TodoControllerTest {
 
     @Test
     void shouldReturnUpdatedTodoWhenUpdateTodo() throws Exception {
-        UpdateTodoRequest req = new UpdateTodoRequest();
+        var req = new UpdateTodoRequest();
         req.setTitle("Updated");
 
-        Todo updated = Todo.builder()
+        var updated = Todo.builder()
             .id(4L).title("Updated").status(TodoStatus.OPEN).source(TodoSource.WEB).build();
         when(todoManagement.updateTodo(4, "Updated", null)).thenReturn(updated);
         when(todoResponseMapper.toResponse(updated))
@@ -127,7 +130,7 @@ class TodoControllerTest {
 
     @Test
     void shouldReturnDoneTodoWhenMarkDone() throws Exception {
-        Todo done = Todo.builder()
+        var done = Todo.builder()
             .id(6L).title("Done").status(TodoStatus.DONE).source(TodoSource.WEB).build();
         when(todoManagement.markDone(6)).thenReturn(done);
         when(todoResponseMapper.toResponse(done))
@@ -140,7 +143,7 @@ class TodoControllerTest {
 
     @Test
     void shouldReturnCancelledTodoWhenCancel() throws Exception {
-        Todo cancelled = Todo.builder()
+        var cancelled = Todo.builder()
             .id(7L).title("Cancel").status(TodoStatus.CANCELLED).source(TodoSource.WEB).build();
         when(todoManagement.cancel(7)).thenReturn(cancelled);
         when(todoResponseMapper.toResponse(cancelled))

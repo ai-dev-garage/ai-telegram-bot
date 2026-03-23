@@ -4,12 +4,17 @@ import com.ai.dev.garage.bot.application.port.in.JobActions;
 import com.ai.dev.garage.bot.application.port.out.JobStore;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
-import jakarta.persistence.EntityNotFoundException;
-import java.time.OffsetDateTime;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +30,7 @@ public class JobActionsService implements JobActions {
             throw new IllegalStateException("job already terminal");
         }
         job.setStatus(JobStatus.CANCELLED);
-        job.setFinishedAt(OffsetDateTime.now());
+        job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         return jobStore.save(job);
     }
 

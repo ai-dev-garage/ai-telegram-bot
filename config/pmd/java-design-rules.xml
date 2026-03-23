@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Java design rules (ai-dev-garage)"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>Java PMD ruleset with pragmatic exclusions for this service.</description>
+
+    <!-- Include errorprone rules except problematic ones -->
+    <rule ref="category/java/errorprone.xml">
+        <!-- Repeated user-facing / JSON key strings across a class are often clearer than indirection. -->
+        <exclude name="AvoidDuplicateLiterals" />
+        <exclude name="UnnecessaryBooleanAssertion" />
+        <exclude name="MissingSerialVersionUID" />
+        <exclude name="AvoidLiteralsInIfCondition" />  <!-- Numbers like 3, 5, etc. are often fine -->
+    </rule>
+
+    <!-- Include bestpractices rules except overly strict ones -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- Stream parsers legitimately hold StringBuilder accumulators across many helper methods. -->
+        <exclude name="AvoidStringBufferField" />
+        <exclude name="GuardLogStatement" />  <!-- Modern logging frameworks are optimized -->
+        <exclude name="PreserveStackTrace" />  <!-- Often acceptable for business exceptions -->
+        <exclude name="LooseCoupling" />
+    </rule>
+
+    <!-- Include performance rules -->
+    <rule ref="category/java/performance.xml">
+        <!-- Default StringBuilder capacity is fine for short Telegram/status messages; noise vs value. -->
+        <exclude name="InsufficientStringBufferDeclaration" />
+        <!-- Chained append(msg).append(x) is often clearer than one long literal; marginal performance win. -->
+        <exclude name="ConsecutiveAppendsShouldReuse" />
+        <!-- Same rationale: readability over micro-optimizing append grouping. -->
+        <exclude name="ConsecutiveLiteralAppends" />
+        <!-- String + variable in append is idiomatic for mixed messages; excluding avoids wide refactors. -->
+        <exclude name="InefficientStringBuffering" />
+        <!-- UI row builders and similar patterns allocate per visible control by design. -->
+        <exclude name="AvoidInstantiatingObjectsInLoops" />
+        <!-- Prefer append('\\n') where it helps; not worth failing the build on every "\n" literal. -->
+        <exclude name="AppendCharacterWithChar" />
+    </rule>
+
+    <!-- Include security rules -->
+    <rule ref="category/java/security.xml" />
+
+    <!-- Include design rules except problematic ones -->
+    <rule ref="category/java/design.xml">
+        <!-- Mutable accumulators and port DTOs are not anemic domain models. -->
+        <exclude name="DataClass" />
+        <exclude name="LoosePackageCoupling" />
+        <exclude name="AvoidCatchingGenericException" />  <!-- Sometimes needed for top-level handlers -->
+        <exclude name="TooManyMethods" />  <!-- Repository pattern requires many methods for CRUD operations -->
+        <exclude name="NPathComplexity" />  <!-- Complex business logic sometimes requires higher complexity -->
+        <exclude name="TooManyFields" />
+        <exclude name="UseUtilityClass" />
+    </rule>
+
+    <!-- Include most codestyle rules but exclude overly strict ones -->
+    <rule ref="category/java/codestyle.xml">
+        <!-- Same intent as design/ConfusingTernary (already excluded): PMD 7 also reports this rule from codestyle. -->
+        <exclude name="ConfusingTernary" />
+        <exclude name="AtLeastOneConstructor" />
+        <exclude name="MethodArgumentCouldBeFinal" />
+        <exclude name="LocalVariableCouldBeFinal" />
+        <exclude name="ShortVariable" />
+        <exclude name="OnlyOneReturn" />        <!-- Early returns improve readability -->
+        <exclude name="LongVariable" />         <!-- Descriptive names are better than short ones -->
+        <exclude name="UseExplicitTypes" />
+        <exclude name="TooManyStaticImports" />
+        <exclude name="FieldDeclarationsShouldBeAtStartOfClass" />
+        <exclude name="CommentDefaultAccessModifier" />
+        <exclude name="FieldNamingConventions" />
+    </rule>
+
+    <!-- Configure LawOfDemeter to allow max degree 2 for invoke on foreign value -->
+    <rule ref="category/java/design.xml/LawOfDemeter">
+        <properties>
+            <property name="trustRadius" value="2" />
+        </properties>
+    </rule>
+
+    <!-- Allow higher import count for config classes -->
+    <rule ref="category/java/design.xml/ExcessiveImports">
+        <properties>
+            <property name="minimum" value="50" />
+        </properties>
+    </rule>
+
+    <!-- Slightly above PMD defaults: several methods sit at cyclomatic 10 / cognitive 16 by design. -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="methodReportLevel" value="11" />
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/CognitiveComplexity">
+        <properties>
+            <property name="reportLevel" value="17" />
+        </properties>
+    </rule>
+
+</ruleset>

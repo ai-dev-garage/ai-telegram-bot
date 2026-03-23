@@ -6,4 +6,5 @@ public record JobLogLineView(
     String line,
     String createdAt,
     String levelClass
-) {}
+) {
+}

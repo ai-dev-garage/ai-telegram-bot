@@ -1,11 +1,12 @@
 package com.ai.dev.garage.bot.application.service;
 
 import com.ai.dev.garage.bot.application.port.out.TodoStore;
-import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoStatus;
+
+import org.springframework.stereotype.Component;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * Updates a linked Todo when its associated Job reaches a terminal state.

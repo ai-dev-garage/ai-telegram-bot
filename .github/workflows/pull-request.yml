@@ -29,5 +29,6 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Test
-        run: ./gradlew test --no-daemon
+      # check = Checkstyle (main+test), PMD (main+test), SpotBugs (main+test), compile with Error Prone, test
+      - name: Code quality and tests
+        run: ./gradlew check --no-daemon

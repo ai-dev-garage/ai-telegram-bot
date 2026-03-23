@@ -3,17 +3,26 @@ package com.ai.dev.garage.bot.adapter.in.telegram.command;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
 import com.ai.dev.garage.bot.application.port.in.JobLogQueries;
 import com.ai.dev.garage.bot.application.port.in.JobManagement;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
+import com.ai.dev.garage.bot.application.support.ContentLengthLimits;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.regex.Pattern;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Order(40)
 @ConditionalOnProperty(prefix = "app.telegram", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class LogsCommand implements TelegramCommand {
+
+    private static final Pattern WHITESPACE_SPLIT = Pattern.compile("\\s+");
+
+    private static final int DEFAULT_LOG_TAIL_LINES = 100;
 
     private final JobManagement jobManagement;
     private final JobLogQueries jobLogQueries;
@@ -36,13 +45,13 @@ public class LogsCommand implements TelegramCommand {
 
     @Override
     public void handle(TelegramCommandContext ctx) {
-        String[] parts = ctx.text().split("\\s+");
+        String[] parts = WHITESPACE_SPLIT.split(ctx.text(), -1);
         if (parts.length < 2) {
             telegramBotClient.sendPlain(ctx.chatId(), "Usage: /logs <job_id> [tail=50]");
             return;
         }
         String id = parts[1];
-        int tail = 100;
+        int tail = DEFAULT_LOG_TAIL_LINES;
         for (String p : parts) {
             if (p.startsWith("tail=")) {
                 tail = Integer.parseInt(p.substring("tail=".length()));
@@ -53,8 +62,8 @@ public class LogsCommand implements TelegramCommand {
                 ? jobManagement.getJob("last").getId()
                 : Long.valueOf(id);
             String logs = String.join("\n", jobLogQueries.getTail(resolvedId, tail));
-            if (logs.length() > 4000) {
-                logs = logs.substring(logs.length() - 4000);
+            if (logs.length() > ContentLengthLimits.JOB_TEXT_SNIPPET_MAX) {
+                logs = logs.substring(logs.length() - ContentLengthLimits.JOB_TEXT_SNIPPET_MAX);
             }
             telegramBotClient.sendPlain(ctx.chatId(), logs.isBlank() ? "No logs." : logs);
         } catch (Exception e) {

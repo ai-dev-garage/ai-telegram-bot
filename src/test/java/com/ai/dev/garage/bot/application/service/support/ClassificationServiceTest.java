@@ -1,20 +1,22 @@
 package com.ai.dev.garage.bot.application.service.support;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
 import com.ai.dev.garage.bot.application.port.out.PolicyProvider;
 import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.RiskLevel;
 import com.ai.dev.garage.bot.domain.TaskType;
-import java.util.List;
-import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ClassificationServiceTest {

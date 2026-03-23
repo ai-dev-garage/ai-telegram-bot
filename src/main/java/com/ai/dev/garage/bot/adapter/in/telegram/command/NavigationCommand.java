@@ -3,17 +3,22 @@ package com.ai.dev.garage.bot.adapter.in.telegram.command;
 import com.ai.dev.garage.bot.adapter.in.telegram.InlineKeyboardBuilder;
 import com.ai.dev.garage.bot.adapter.in.telegram.NavigationStateStore;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
+import com.ai.dev.garage.bot.adapter.in.telegram.command.support.DirectoryListingHelper;
 import com.ai.dev.garage.bot.config.RunnerProperties;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -45,8 +50,8 @@ public class NavigationCommand implements TelegramCommand {
             return false;
         }
         String t = text.trim();
-        return t.equals("/navigation")
-            || t.equals("/nav")
+        return Objects.equals(t, "/navigation")
+            || Objects.equals(t, "/nav")
             || t.startsWith("/navigation ")
             || t.startsWith("/nav ");
     }
@@ -82,7 +87,7 @@ public class NavigationCommand implements TelegramCommand {
             return;
         }
 
-        InlineKeyboardBuilder kb = InlineKeyboardBuilder.create();
+        var kb = InlineKeyboardBuilder.create();
         for (PathSnapshot snap : resolved) {
             kb.row(snap.buttonLabel(), CALLBACK_PREFIX + snap.index());
         }
@@ -102,7 +107,7 @@ public class NavigationCommand implements TelegramCommand {
         if (path.startsWith("~/")) {
             return System.getProperty("user.home") + path.substring(1);
         }
-        if ("~".equals(path)) {
+        if (Objects.equals(path, "~")) {
             return System.getProperty("user.home");
         }
         return path;

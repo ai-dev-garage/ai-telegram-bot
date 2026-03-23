@@ -9,12 +9,23 @@ import com.ai.dev.garage.bot.application.port.in.TodoManagement;
 import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.TodoSource;
 import com.ai.dev.garage.bot.domain.TodoStatus;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
+
 import java.util.List;
 import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,10 +37,10 @@ public class TodoController {
 
     @GetMapping("/todos")
     public Map<String, Object> listTodos(
-            @RequestParam(required = false) TodoStatus status,
-            @RequestParam(defaultValue = "50") int limit,
-            @RequestParam(defaultValue = "createdAt") String sort,
-            @RequestParam(defaultValue = "desc") String dir) {
+        @RequestParam(required = false) TodoStatus status,
+        @RequestParam(defaultValue = "50") int limit,
+        @RequestParam(defaultValue = "createdAt") String sort,
+        @RequestParam(defaultValue = "desc") String dir) {
         List<TodoResponse> todos = todoManagement.listTodos(status, limit, sort, dir)
             .stream().map(todoResponseMapper::toResponse).toList();
         return Map.of("todos", todos);
@@ -43,7 +54,7 @@ public class TodoController {
     @PostMapping("/todos")
     @ResponseStatus(HttpStatus.CREATED)
     public TodoResponse createTodo(@Valid @RequestBody CreateTodoRequest request) {
-        Requester webRequester = Requester.builder()
+        var webRequester = Requester.builder()
             .telegramUserId(0L)
             .telegramChatId(0L)
             .telegramUsername("web")

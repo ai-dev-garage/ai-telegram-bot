@@ -4,54 +4,54 @@
 <div th:fragment="table">
   <table class="w-full text-sm text-left">
     <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-      <tr>
-        <th class="px-4 py-3">ID</th>
-        <th class="px-4 py-3">Title</th>
-        <th class="px-4 py-3">Status</th>
-        <th class="px-4 py-3">Source</th>
-        <th class="px-4 py-3">Workspace</th>
-        <th class="px-4 py-3">Job</th>
-        <th class="px-4 py-3">Created</th>
-        <th class="px-4 py-3">Actions</th>
-      </tr>
+    <tr>
+      <th class="px-4 py-3">ID</th>
+      <th class="px-4 py-3">Title</th>
+      <th class="px-4 py-3">Status</th>
+      <th class="px-4 py-3">Source</th>
+      <th class="px-4 py-3">Workspace</th>
+      <th class="px-4 py-3">Job</th>
+      <th class="px-4 py-3">Created</th>
+      <th class="px-4 py-3">Actions</th>
+    </tr>
     </thead>
     <tbody>
-      <tr th:each="t : ${todos}"
-          class="border-b border-gray-100 hover:bg-gray-50">
-        <td class="px-4 py-3 font-mono text-xs text-gray-500">
-          <a th:href="'/ui/todos/' + ${t.id()}" class="hover:underline text-blue-600" th:text="'#' + ${t.id()}"></a>
-        </td>
-        <td class="px-4 py-3 max-w-xs truncate">
-          <a th:href="'/ui/todos/' + ${t.id()}" class="hover:underline" th:text="${t.title()}"></a>
-        </td>
-        <td class="px-4 py-3">
-          <span th:replace="~{fragments/status-badge :: badge(${t.status()}, ${t.badgeClass()})}"></span>
-        </td>
-        <td class="px-4 py-3 text-gray-600" th:text="${t.source()}"></td>
-        <td class="px-4 py-3 text-gray-500 text-xs max-w-[12rem] truncate" th:text="${t.workspace()} ?: '—'"></td>
-        <td class="px-4 py-3 text-gray-500 text-xs">
-          <a th:if="${t.linkedJobId()}" th:href="'/ui/jobs/' + ${t.linkedJobId()}"
-             class="text-blue-600 hover:underline" th:text="'#' + ${t.linkedJobId()}"></a>
-          <span th:unless="${t.linkedJobId()}">—</span>
-        </td>
-        <td class="px-4 py-3 text-gray-400 text-xs" th:text="${t.createdAt()}"></td>
-        <td class="px-4 py-3">
-          <div class="flex gap-1" th:if="${t.open()}">
-            <button th:hx-post="'/ui/todos/' + ${t.id()} + '/done'"
-                    hx-target="#todo-table-container"
-                    hx-swap="innerHTML"
-                    class="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200">
-              Done
-            </button>
-            <button th:hx-post="'/ui/todos/' + ${t.id()} + '/cancel'"
-                    hx-target="#todo-table-container"
-                    hx-swap="innerHTML"
-                    class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200">
-              Cancel
-            </button>
-          </div>
-        </td>
-      </tr>
+    <tr th:each="t : ${todos}"
+        class="border-b border-gray-100 hover:bg-gray-50">
+      <td class="px-4 py-3 font-mono text-xs text-gray-500">
+        <a th:href="'/ui/todos/' + ${t.id()}" class="hover:underline text-blue-600" th:text="'#' + ${t.id()}"></a>
+      </td>
+      <td class="px-4 py-3 max-w-xs truncate">
+        <a th:href="'/ui/todos/' + ${t.id()}" class="hover:underline" th:text="${t.title()}"></a>
+      </td>
+      <td class="px-4 py-3">
+        <span th:replace="~{fragments/status-badge :: badge(${t.status()}, ${t.badgeClass()})}"></span>
+      </td>
+      <td class="px-4 py-3 text-gray-600" th:text="${t.source()}"></td>
+      <td class="px-4 py-3 text-gray-500 text-xs max-w-[12rem] truncate" th:text="${t.workspace()} ?: '—'"></td>
+      <td class="px-4 py-3 text-gray-500 text-xs">
+        <a th:if="${t.linkedJobId()}" th:href="'/ui/jobs/' + ${t.linkedJobId()}"
+           class="text-blue-600 hover:underline" th:text="'#' + ${t.linkedJobId()}"></a>
+        <span th:unless="${t.linkedJobId()}">—</span>
+      </td>
+      <td class="px-4 py-3 text-gray-400 text-xs" th:text="${t.createdAt()}"></td>
+      <td class="px-4 py-3">
+        <div class="flex gap-1" th:if="${t.open()}">
+          <button th:hx-post="'/ui/todos/' + ${t.id()} + '/done'"
+                  hx-target="#todo-table-container"
+                  hx-swap="innerHTML"
+                  class="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200">
+            Done
+          </button>
+          <button th:hx-post="'/ui/todos/' + ${t.id()} + '/cancel'"
+                  hx-target="#todo-table-container"
+                  hx-swap="innerHTML"
+                  class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200">
+            Cancel
+          </button>
+        </div>
+      </td>
+    </tr>
     </tbody>
   </table>
   <p th:if="${#lists.isEmpty(todos)}" class="text-center text-gray-400 py-8 text-sm">

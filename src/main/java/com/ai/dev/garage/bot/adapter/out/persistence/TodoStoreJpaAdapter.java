@@ -3,14 +3,17 @@ package com.ai.dev.garage.bot.adapter.out.persistence;
 import com.ai.dev.garage.bot.application.port.out.TodoStore;
 import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoStatus;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

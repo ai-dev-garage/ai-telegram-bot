@@ -5,4 +5,5 @@ public record JobEventView(
     String dataJson,
     String createdAt,
     boolean hasData
-) {}
+) {
+}

@@ -39,5 +39,6 @@ public record JobDetailView(
         String questionText,
         String answer,
         boolean answered
-    ) {}
+    ) {
+    }
 }

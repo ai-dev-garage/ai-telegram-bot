@@ -1,11 +1,5 @@
 package com.ai.dev.garage.bot.application.service.support;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.ai.dev.garage.bot.application.port.out.JobStore;
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.application.port.out.PlanSessionResult;
@@ -17,20 +11,33 @@ import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.PlanState;
-import java.util.List;
-import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class PlanResultPersistenceServiceTest {
 
-    @Mock private PlanSessionStore planSessionStore;
-    @Mock private JobStore jobStore;
-    @Mock private JsonCodec jsonCodec;
+    @Mock
+    private PlanSessionStore planSessionStore;
+    @Mock
+    private JobStore jobStore;
+    @Mock
+    private JsonCodec jsonCodec;
 
     private PlanResultPersistenceService service;
 
@@ -41,21 +48,21 @@ class PlanResultPersistenceServiceTest {
 
     @Test
     void shouldPersistQuestionsAndNotifyWhenCliReturnsQuestions() {
-        PlanSession session = PlanSession.builder()
+        var session = PlanSession.builder()
             .id(5L)
             .jobId(99L)
             .state(PlanState.PLANNING)
             .round(1)
             .build();
-        Job job = Job.builder().id(99L).status(JobStatus.RUNNING).build();
-        PlanCompletionListener listener = org.mockito.Mockito.mock(PlanCompletionListener.class);
+        var job = Job.builder().id(99L).status(JobStatus.RUNNING).build();
+        var listener = mock(PlanCompletionListener.class);
 
         when(planSessionStore.findByJobId(99L)).thenReturn(Optional.of(session));
         when(jsonCodec.toJson(any())).thenReturn("[]");
         when(jobStore.findById(99L)).thenReturn(Optional.of(job));
 
-        ParsedQuestion pq = new ParsedQuestion("What?", List.of("A", "B"));
-        PlanSessionResult result = new PlanSessionResult(
+        var pq = new ParsedQuestion("What?", List.of("A", "B"));
+        var result = new PlanSessionResult(
             "cli-sid-1",
             List.of(new ParsedMessage("msg", List.of(pq))),
             false,
@@ -70,24 +77,24 @@ class PlanResultPersistenceServiceTest {
         assertThat(job.getStatus()).isEqualTo(JobStatus.AWAITING_INPUT);
         verify(jobStore).save(job);
         verify(listener).onQuestionsReady(99L, 5L);
-        verify(listener, never()).onPlanReady(org.mockito.ArgumentMatchers.anyLong());
+        verify(listener, never()).onPlanReady(anyLong());
     }
 
     @Test
     void shouldSetPlanReadyAndNotifyWhenNoQuestions() {
-        PlanSession session = PlanSession.builder()
+        var session = PlanSession.builder()
             .id(5L)
             .jobId(99L)
             .state(PlanState.PLANNING)
             .round(1)
             .build();
-        Job job = Job.builder().id(99L).status(JobStatus.RUNNING).build();
-        PlanCompletionListener listener = org.mockito.Mockito.mock(PlanCompletionListener.class);
+        var job = Job.builder().id(99L).status(JobStatus.RUNNING).build();
+        var listener = mock(PlanCompletionListener.class);
 
         when(planSessionStore.findByJobId(99L)).thenReturn(Optional.of(session));
         when(jobStore.findById(99L)).thenReturn(Optional.of(job));
 
-        PlanSessionResult result = new PlanSessionResult(
+        var result = new PlanSessionResult(
             null,
             List.of(new ParsedMessage("done", List.of())),
             true,
@@ -99,12 +106,12 @@ class PlanResultPersistenceServiceTest {
         assertThat(session.getState()).isEqualTo(PlanState.PLAN_READY);
         verify(planSessionStore, never()).saveQuestion(any());
         verify(listener).onPlanReady(99L);
-        verify(listener, never()).onQuestionsReady(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong());
+        verify(listener, never()).onQuestionsReady(anyLong(), anyLong());
     }
 
     @Test
     void shouldNotFailWhenListenerIsNull() {
-        PlanSession session = PlanSession.builder()
+        var session = PlanSession.builder()
             .id(5L)
             .jobId(99L)
             .state(PlanState.PLANNING)
@@ -112,7 +119,7 @@ class PlanResultPersistenceServiceTest {
             .build();
         when(planSessionStore.findByJobId(99L)).thenReturn(Optional.of(session));
 
-        PlanSessionResult result = new PlanSessionResult(null, List.of(), true, "x");
+        var result = new PlanSessionResult(null, List.of(), true, "x");
         service.persistCliResult(99L, result, null);
 
         assertThat(session.getState()).isEqualTo(PlanState.PLAN_READY);

@@ -3,23 +3,26 @@ package com.ai.dev.garage.bot.adapter.in.web;
 import com.ai.dev.garage.bot.adapter.in.web.dto.TodoSummaryView;
 import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoStatus;
+
+import org.springframework.stereotype.Component;
+
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import org.springframework.stereotype.Component;
 
 @Component
 public class TodoViewDtoMapper {
 
-    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.ROOT);
 
     private static final Map<TodoStatus, String> STATUS_BADGE = Map.of(
-        TodoStatus.OPEN,        "bg-blue-500 text-white",
+        TodoStatus.OPEN, "bg-blue-500 text-white",
         TodoStatus.IN_PROGRESS, "bg-yellow-500 text-white",
-        TodoStatus.DONE,        "bg-green-500 text-white",
-        TodoStatus.CANCELLED,   "bg-gray-600 text-white"
+        TodoStatus.DONE, "bg-green-500 text-white",
+        TodoStatus.CANCELLED, "bg-gray-600 text-white"
     );
 
     private static final Set<TodoStatus> ACTIONABLE = Set.of(TodoStatus.OPEN, TodoStatus.IN_PROGRESS);

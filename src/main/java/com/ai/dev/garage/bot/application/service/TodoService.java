@@ -9,12 +9,16 @@ import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoSource;
 import com.ai.dev.garage.bot.domain.TodoStatus;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -29,7 +33,7 @@ public class TodoService implements TodoManagement {
     @Transactional
     public Todo createTodo(String title, String description, TodoSource source,
                            Requester requester, String workspace) {
-        Todo todo = Todo.builder()
+        var todo = Todo.builder()
             .title(title)
             .description(description)
             .source(source)

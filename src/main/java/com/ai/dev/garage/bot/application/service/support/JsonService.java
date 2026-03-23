@@ -1,10 +1,14 @@
 package com.ai.dev.garage.bot.application.service.support;
 
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +25,7 @@ public class JsonService implements JsonCodec {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // readValue(Map.class): JSON object maps are erased at runtime
     public Map<String, Object> fromJson(String json) {
         if (json == null || json.isBlank()) {
             return Map.of();

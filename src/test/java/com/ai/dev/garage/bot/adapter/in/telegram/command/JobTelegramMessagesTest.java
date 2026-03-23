@@ -1,8 +1,8 @@
 package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class JobTelegramMessagesTest {
 

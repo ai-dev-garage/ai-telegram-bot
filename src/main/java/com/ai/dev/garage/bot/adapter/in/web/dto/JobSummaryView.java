@@ -11,4 +11,5 @@ public record JobSummaryView(
     int attempt,
     String createdAt,
     String updatedAt
-) {}
+) {
+}

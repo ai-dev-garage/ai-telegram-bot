@@ -9,6 +9,7 @@ import com.ai.dev.garage.bot.application.port.out.PlanSessionResult;
 import com.ai.dev.garage.bot.application.port.out.PlanSessionStore;
 import com.ai.dev.garage.bot.application.service.support.PlanResultPersistenceService;
 import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
+import com.ai.dev.garage.bot.application.support.ContentLengthLimits;
 import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
@@ -18,8 +19,16 @@ import com.ai.dev.garage.bot.domain.PlanState;
 import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.RiskLevel;
 import com.ai.dev.garage.bot.domain.TaskType;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import jakarta.persistence.EntityNotFoundException;
+
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,17 +36,16 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PlanSessionService implements PlanManagement {
+
+    private static final String TRUNCATE_ELLIPSIS = "...";
 
     private final JobStore jobStore;
     private final PlanSessionStore planSessionStore;
@@ -86,18 +94,18 @@ public class PlanSessionService implements PlanManagement {
             .approvalState(ApprovalState.APPROVED)
             .status(JobStatus.RUNNING)
             .taskPayloadJson(jsonCodec.toJson(payload))
-            .startedAt(OffsetDateTime.now())
+            .startedAt(OffsetDateTime.now(ZoneId.systemDefault()))
             .build();
         job = jobStore.save(job);
 
-        PlanSession session = PlanSession.builder()
+        var session = PlanSession.builder()
             .jobId(job.getId())
             .state(PlanState.PLANNING)
             .build();
         planSessionStore.save(session);
 
-        final long jobId = job.getId();
-        final String prompt = intent;
+        long jobId = job.getId();
+        String prompt = intent;
         submitAfterCommit(() -> executePlanRound(jobId, prompt, null));
 
         log.info("Plan job {} created, CLI starting async", jobId);
@@ -128,7 +136,7 @@ public class PlanSessionService implements PlanManagement {
             .orElseThrow(() -> new EntityNotFoundException(
                 "Question not found: session=" + sessionId + " round=" + round + " seq=" + seq));
         question.setAnswer(answer);
-        question.setAnsweredAt(OffsetDateTime.now());
+        question.setAnsweredAt(OffsetDateTime.now(ZoneId.systemDefault()));
         planSessionStore.saveQuestion(question);
     }
 
@@ -178,10 +186,10 @@ public class PlanSessionService implements PlanManagement {
         String exportedPath = planFileExporter.exportPlan(job, session, allQuestions);
 
         job.setStatus(JobStatus.SUCCESS);
-        job.setFinishedAt(OffsetDateTime.now());
+        job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         Map<String, Object> result = new HashMap<>();
         result.put("summary", "Plan approved");
-        result.put("plan", truncate(session.getPlanText(), 4000));
+        result.put("plan", truncate(session.getPlanText(), ContentLengthLimits.JOB_TEXT_SNIPPET_MAX));
         if (exportedPath != null) {
             result.put("exportedTo", exportedPath);
         }
@@ -214,8 +222,7 @@ public class PlanSessionService implements PlanManagement {
             result.put("exportedTo", exportedPath);
         }
         job.setResultJson(jsonCodec.toJson(result));
-        Job saved = jobStore.save(job);
-        return saved;
+        return jobStore.save(job);
     }
 
     @Override
@@ -228,7 +235,7 @@ public class PlanSessionService implements PlanManagement {
         Job job = jobStore.findById(jobId)
             .orElseThrow(() -> new EntityNotFoundException("Job not found: " + jobId));
         job.setStatus(JobStatus.CANCELLED);
-        job.setFinishedAt(OffsetDateTime.now());
+        job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         Job saved = jobStore.save(job);
         todoCompletionHook.onJobCancelled(saved.getId());
         return saved;
@@ -261,7 +268,7 @@ public class PlanSessionService implements PlanManagement {
                 if (job != null) {
                     job.setStatus(JobStatus.FAILED);
                     job.setLastError(e.getMessage());
-                    job.setFinishedAt(OffsetDateTime.now());
+                    job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
                     jobStore.save(job);
                 }
             } catch (Exception inner) {
@@ -284,7 +291,7 @@ public class PlanSessionService implements PlanManagement {
 
     private String compileAnswers(long sessionId, int round) {
         List<PlanQuestion> questions = planSessionStore.findQuestionsBySessionAndRound(sessionId, round);
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         for (PlanQuestion q : questions) {
             sb.append("Q").append(q.getSeq()).append(": ").append(q.getQuestionText()).append("\n");
             sb.append("A: ").append(q.getAnswer() != null ? q.getAnswer() : "(no answer)").append("\n\n");
@@ -301,14 +308,16 @@ public class PlanSessionService implements PlanManagement {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                planExecutor.submit(task);
+                planExecutor.execute(task);
             }
         });
     }
 
     private static String truncate(String s, int max) {
-        if (s == null) return "";
-        return s.length() <= max ? s : s.substring(0, max - 3) + "...";
+        if (s == null) {
+            return "";
+        }
+        return s.length() <= max ? s : s.substring(0, max - TRUNCATE_ELLIPSIS.length()) + TRUNCATE_ELLIPSIS;
     }
 
     /**
@@ -316,7 +325,9 @@ public class PlanSessionService implements PlanManagement {
      */
     public interface PlanCompletionListener {
         void onQuestionsReady(long jobId, long sessionId);
+
         void onPlanReady(long jobId);
+
         void onPlanError(long jobId, String error);
     }
 }

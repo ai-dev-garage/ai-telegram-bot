@@ -2,11 +2,14 @@ package com.ai.dev.garage.bot.adapter.out.persistence;
 
 import com.ai.dev.garage.bot.application.port.out.JobLogStore;
 import com.ai.dev.garage.bot.domain.JobLog;
-import java.util.Collections;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -16,7 +19,7 @@ public class JobLogStoreJpaAdapter implements JobLogStore {
 
     @Override
     public void appendLine(Long jobId, String line) {
-        JobLog log = JobLog.builder()
+        var log = JobLog.builder()
             .jobId(jobId)
             .seq(jobLogRepository.maxSeq(jobId) + 1)
             .line(line)

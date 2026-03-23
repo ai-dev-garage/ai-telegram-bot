@@ -1,12 +1,11 @@
 package com.ai.dev.garage.bot;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.ai.dev.garage.bot.adapter.out.claude.ClaudeCliAdapter;
 import com.ai.dev.garage.bot.adapter.out.claude.ClaudePlanCliAdapter;
 import com.ai.dev.garage.bot.adapter.out.cursor.CursorPlanCliAdapter;
 import com.ai.dev.garage.bot.application.port.out.AgentTaskRuntime;
 import com.ai.dev.garage.bot.application.port.out.PlanCliRuntime;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +16,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Ensures the Spring context starts with {@code AGENT_RUNTIME=claude} and wires {@link PlanCliRuntime}
@@ -29,18 +30,18 @@ class RunnerClaudeRuntimeContextTest {
 
     @Container
     @SuppressWarnings("resource")
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
-
-    @DynamicPropertySource
-    static void registerProps(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("app.runner.agent-runtime", () -> "claude");
-    }
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Autowired
     private ApplicationContext context;
+
+    @DynamicPropertySource
+    static void registerProps(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("app.runner.agent-runtime", () -> "claude");
+    }
 
     @Test
     void contextLoadsWithSinglePlanCliRuntimeAndClaudeAdapters() {

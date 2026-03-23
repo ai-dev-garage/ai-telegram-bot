@@ -1,5 +1,7 @@
 package com.ai.dev.garage.bot.application.execution;
 
+import com.ai.dev.garage.bot.application.execution.model.TaskExecutionContext;
+import com.ai.dev.garage.bot.application.execution.model.TaskExecutionResult;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.TaskType;
 

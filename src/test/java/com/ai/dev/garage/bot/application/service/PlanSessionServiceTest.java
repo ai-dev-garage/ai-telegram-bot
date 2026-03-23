@@ -1,11 +1,5 @@
 package com.ai.dev.garage.bot.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.ai.dev.garage.bot.adapter.out.filesystem.PlanFileExporter;
 import com.ai.dev.garage.bot.application.port.out.JobStore;
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
@@ -18,27 +12,43 @@ import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.PlanState;
-import java.util.List;
-import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PlanSessionServiceTest {
 
-    @Mock private JobStore jobStore;
-    @Mock private PlanSessionStore planSessionStore;
-    @Mock private PlanCliRuntime planCliRuntime;
-    @Mock private JsonCodec jsonCodec;
-    @Mock private AllowedPathValidator allowedPathValidator;
-    @Mock private TodoCompletionHook todoCompletionHook;
-    @Mock private PlanFileExporter planFileExporter;
-    @Mock private PlanResultPersistenceService planResultPersistenceService;
+    @Mock
+    private JobStore jobStore;
+    @Mock
+    private PlanSessionStore planSessionStore;
+    @Mock
+    private PlanCliRuntime planCliRuntime;
+    @Mock
+    private JsonCodec jsonCodec;
+    @Mock
+    private AllowedPathValidator allowedPathValidator;
+    @Mock
+    private TodoCompletionHook todoCompletionHook;
+    @Mock
+    private PlanFileExporter planFileExporter;
+    @Mock
+    private PlanResultPersistenceService planResultPersistenceService;
 
     private PlanSessionService service;
 
@@ -72,16 +82,16 @@ class PlanSessionServiceTest {
 
         @Test
         void shouldTransitionToPausedWhenPlanReady() {
-            PlanSession session = readySession(10L, 42L);
-            Job job = runningJob(42L, "Build auth");
+            var session = readySession(10L, 42L);
+            var job = runningJob(42L, "Build auth");
 
             when(planSessionStore.findByJobId(42L)).thenReturn(Optional.of(session));
             when(jobStore.findById(42L)).thenReturn(Optional.of(job));
             when(planSessionStore.findAllQuestionsBySession(10L)).thenReturn(List.of());
-            when(jsonCodec.toJson(org.mockito.ArgumentMatchers.anyMap())).thenReturn("{}");
+            when(jsonCodec.toJson(anyMap())).thenReturn("{}");
             when(jobStore.save(job)).thenReturn(job);
 
-            Job result = service.pausePlan(42L);
+            var result = service.pausePlan(42L);
 
             assertThat(session.getState()).isEqualTo(PlanState.PAUSED);
             assertThat(result.getStatus()).isEqualTo(JobStatus.PAUSED);
@@ -91,7 +101,7 @@ class PlanSessionServiceTest {
 
         @Test
         void shouldRejectPauseWhenNotPlanReady() {
-            PlanSession session = PlanSession.builder()
+            var session = PlanSession.builder()
                 .id(10L).jobId(42L).state(PlanState.AWAITING_INPUT).build();
             when(planSessionStore.findByJobId(42L)).thenReturn(Optional.of(session));
 
@@ -106,19 +116,19 @@ class PlanSessionServiceTest {
 
         @Test
         void shouldExportPlanFileOnApprove() {
-            PlanSession session = readySession(10L, 42L);
-            Job job = runningJob(42L, "Build auth");
-            List<PlanQuestion> questions = List.of();
+            var session = readySession(10L, 42L);
+            var job = runningJob(42L, "Build auth");
+            var questions = List.<PlanQuestion>of();
 
             when(planSessionStore.findByJobId(42L)).thenReturn(Optional.of(session));
             when(jobStore.findById(42L)).thenReturn(Optional.of(job));
             when(planSessionStore.findAllQuestionsBySession(10L)).thenReturn(questions);
             when(planFileExporter.exportPlan(job, session, questions))
                 .thenReturn("/home/user/.ai-dev-garage/plans/plan_build-auth_0000002a.plan.md");
-            when(jsonCodec.toJson(org.mockito.ArgumentMatchers.anyMap())).thenReturn("{}");
+            when(jsonCodec.toJson(anyMap())).thenReturn("{}");
             when(jobStore.save(job)).thenReturn(job);
 
-            Job result = service.approvePlan(42L);
+            var result = service.approvePlan(42L);
 
             assertThat(session.getState()).isEqualTo(PlanState.APPROVED);
             assertThat(result.getStatus()).isEqualTo(JobStatus.SUCCESS);
@@ -128,17 +138,17 @@ class PlanSessionServiceTest {
 
         @Test
         void shouldAllowApproveFromPausedState() {
-            PlanSession session = PlanSession.builder()
+            var session = PlanSession.builder()
                 .id(10L).jobId(42L).state(PlanState.PAUSED).planText("Plan.").round(1).build();
-            Job job = runningJob(42L, "Build auth");
+            var job = runningJob(42L, "Build auth");
 
             when(planSessionStore.findByJobId(42L)).thenReturn(Optional.of(session));
             when(jobStore.findById(42L)).thenReturn(Optional.of(job));
             when(planSessionStore.findAllQuestionsBySession(10L)).thenReturn(List.of());
-            when(jsonCodec.toJson(org.mockito.ArgumentMatchers.anyMap())).thenReturn("{}");
+            when(jsonCodec.toJson(anyMap())).thenReturn("{}");
             when(jobStore.save(job)).thenReturn(job);
 
-            Job result = service.approvePlan(42L);
+            service.approvePlan(42L);
 
             assertThat(session.getState()).isEqualTo(PlanState.APPROVED);
         }

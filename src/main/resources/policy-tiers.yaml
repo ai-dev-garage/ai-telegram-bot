@@ -10,7 +10,7 @@ allowlist_safe:
     - "repo-sync"
   workflow_task:
     - "health_check"
-  agent_task: []
+  agent_task: [ ]
 
 require_approval_patterns:
   shell_command:

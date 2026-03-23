@@ -3,12 +3,15 @@ package com.ai.dev.garage.bot.adapter.out.persistence;
 import com.ai.dev.garage.bot.application.port.in.DashboardQueries;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Component;
+
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor

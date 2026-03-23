@@ -2,10 +2,13 @@ package com.ai.dev.garage.bot.adapter.out.cursor;
 
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.domain.Job;
+
+import org.springframework.stereotype.Component;
+
 import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * Resolves the workspace directory for a job.

@@ -2,146 +2,151 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Job #' + ${job.id()} + ' — AI Dev Garage')}"></head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
-  <div th:replace="~{fragments/nav :: nav}"></div>
+<div th:replace="~{fragments/nav :: nav}"></div>
 
-  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-    <!-- Status panel: badge + error + actions; auto-refreshes while job is active -->
-    <div th:replace="~{fragments/job-status-panel :: panel}"></div>
+  <!-- Status panel: badge + error + actions; auto-refreshes while job is active -->
+  <div th:replace="~{fragments/job-status-panel :: panel}"></div>
 
-    <!-- Metadata grid -->
-    <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Details</h2>
-      <dl class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 text-sm">
-        <div>
-          <dt class="text-gray-400">Intent</dt>
-          <dd class="text-gray-800 break-words" th:text="${job.intent()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Task type</dt>
-          <dd class="text-gray-800" th:text="${job.taskType()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Risk level</dt>
-          <dd class="text-gray-800" th:text="${job.riskLevel()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Approval</dt>
-          <dd class="text-gray-800" th:text="${job.approvalState()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Executor</dt>
-          <dd class="text-gray-800" th:text="${job.executor()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Executor ID</dt>
-          <dd class="text-gray-800" th:text="${job.executorId()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Approved by</dt>
-          <dd class="text-gray-800" th:text="${job.approvedBy()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Requester</dt>
-          <dd class="text-gray-800" th:text="${job.requesterUsername()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Attempt</dt>
-          <dd class="text-gray-800" th:text="${job.attempt()} + ' / ' + ${job.maxAttempts()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Created</dt>
-          <dd class="text-gray-800" th:text="${job.createdAt()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Started</dt>
-          <dd class="text-gray-800" th:text="${job.startedAt()}"></dd>
-        </div>
-        <div>
-          <dt class="text-gray-400">Finished</dt>
-          <dd class="text-gray-800" th:text="${job.finishedAt()}"></dd>
-        </div>
-      </dl>
-    </section>
-
-    <!-- Plan (only for PLAN_TASK jobs) -->
-    <section th:if="${job.isPlanTask()}" class="bg-white rounded-lg border border-gray-200 shadow-sm p-5 space-y-4">
-      <div class="flex items-center gap-3 mb-2">
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Plan</h2>
-        <span th:if="${job.planState()}" class="inline-block px-2 py-0.5 rounded text-xs font-medium"
-              th:classappend="${job.planStateBadge()}" th:text="${job.planState()}"></span>
+  <!-- Metadata grid -->
+  <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Details</h2>
+    <dl class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 text-sm">
+      <div>
+        <dt class="text-gray-400">Intent</dt>
+        <dd class="text-gray-800 break-words" th:text="${job.intent()}"></dd>
       </div>
-      <div th:if="${job.planText() != null}" class="prose prose-sm max-w-none bg-gray-50 rounded border border-gray-100 p-4 overflow-auto max-h-[600px]">
-        <pre class="whitespace-pre-wrap text-sm text-gray-800 font-mono leading-relaxed" th:text="${job.planText()}"></pre>
+      <div>
+        <dt class="text-gray-400">Task type</dt>
+        <dd class="text-gray-800" th:text="${job.taskType()}"></dd>
       </div>
-      <p th:if="${job.planText() == null}" class="text-sm text-gray-400 italic">Plan text not yet available.</p>
+      <div>
+        <dt class="text-gray-400">Risk level</dt>
+        <dd class="text-gray-800" th:text="${job.riskLevel()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Approval</dt>
+        <dd class="text-gray-800" th:text="${job.approvalState()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Executor</dt>
+        <dd class="text-gray-800" th:text="${job.executor()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Executor ID</dt>
+        <dd class="text-gray-800" th:text="${job.executorId()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Approved by</dt>
+        <dd class="text-gray-800" th:text="${job.approvedBy()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Requester</dt>
+        <dd class="text-gray-800" th:text="${job.requesterUsername()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Attempt</dt>
+        <dd class="text-gray-800" th:text="${job.attempt()} + ' / ' + ${job.maxAttempts()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Created</dt>
+        <dd class="text-gray-800" th:text="${job.createdAt()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Started</dt>
+        <dd class="text-gray-800" th:text="${job.startedAt()}"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-400">Finished</dt>
+        <dd class="text-gray-800" th:text="${job.finishedAt()}"></dd>
+      </div>
+    </dl>
+  </section>
 
-      <details th:if="${!job.planQuestions().isEmpty()}" class="mt-4">
-        <summary class="cursor-pointer text-sm font-semibold text-gray-500 uppercase tracking-wide select-none">
-          Q&amp;A History
-          <span class="text-xs font-normal text-gray-400"
-                th:text="'(' + ${job.planQuestions().size()} + ' question' + (${job.planQuestions().size()} != 1 ? 's' : '') + ')'"></span>
-        </summary>
-        <div class="mt-3 space-y-3">
-          <div th:each="q : ${job.planQuestions()}"
-               class="border border-gray-100 rounded p-3 bg-gray-50">
-            <div class="flex items-baseline gap-2 mb-1">
+  <!-- Plan (only for PLAN_TASK jobs) -->
+  <section th:if="${job.isPlanTask()}" class="bg-white rounded-lg border border-gray-200 shadow-sm p-5 space-y-4">
+    <div class="flex items-center gap-3 mb-2">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Plan</h2>
+      <span th:if="${job.planState()}" class="inline-block px-2 py-0.5 rounded text-xs font-medium"
+            th:classappend="${job.planStateBadge()}" th:text="${job.planState()}"></span>
+    </div>
+    <div th:if="${job.planText() != null}"
+         class="prose prose-sm max-w-none bg-gray-50 rounded border border-gray-100 p-4 overflow-auto max-h-[600px]">
+      <pre class="whitespace-pre-wrap text-sm text-gray-800 font-mono leading-relaxed"
+           th:text="${job.planText()}"></pre>
+    </div>
+    <p th:if="${job.planText() == null}" class="text-sm text-gray-400 italic">Plan text not yet available.</p>
+
+    <details th:if="${!job.planQuestions().isEmpty()}" class="mt-4">
+      <summary class="cursor-pointer text-sm font-semibold text-gray-500 uppercase tracking-wide select-none">
+        Q&amp;A History
+        <span class="text-xs font-normal text-gray-400"
+              th:text="'(' + ${job.planQuestions().size()} + ' question' + (${job.planQuestions().size()} != 1 ? 's' : '') + ')'"></span>
+      </summary>
+      <div class="mt-3 space-y-3">
+        <div th:each="q : ${job.planQuestions()}"
+             class="border border-gray-100 rounded p-3 bg-gray-50">
+          <div class="flex items-baseline gap-2 mb-1">
               <span class="text-xs font-medium text-gray-400"
                     th:text="'R' + ${q.round()} + ' Q' + ${q.seq()}"></span>
-              <span th:if="${q.answered()}" class="text-xs text-green-600">answered</span>
-              <span th:unless="${q.answered()}" class="text-xs text-yellow-600">pending</span>
-            </div>
-            <p class="text-sm text-gray-700 font-medium" th:text="${q.questionText()}"></p>
-            <p class="text-sm mt-1" th:classappend="${q.answered()} ? 'text-gray-800' : 'text-gray-400 italic'"
-               th:text="${q.answer()}"></p>
+            <span th:if="${q.answered()}" class="text-xs text-green-600">answered</span>
+            <span th:unless="${q.answered()}" class="text-xs text-yellow-600">pending</span>
           </div>
+          <p class="text-sm text-gray-700 font-medium" th:text="${q.questionText()}"></p>
+          <p class="text-sm mt-1" th:classappend="${q.answered()} ? 'text-gray-800' : 'text-gray-400 italic'"
+             th:text="${q.answer()}"></p>
         </div>
-      </details>
-    </section>
-
-    <!-- Payload / Result JSON -->
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div th:replace="~{fragments/json-viewer :: viewer('Payload', ${job.payloadJson()})}"></div>
-      <div th:replace="~{fragments/json-viewer :: viewer('Result', ${job.resultJson()})}"></div>
-    </section>
-
-    <!-- Event timeline -->
-    <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Events</h2>
-      <div th:hx-get="'/ui/jobs/' + ${job.id()} + '/events'"
-           hx-trigger="load"
-           hx-target="this"
-           hx-swap="innerHTML">
-        <div th:replace="~{fragments/event-timeline :: events}"
-             th:with="events=${job.events()}"></div>
       </div>
-    </section>
+    </details>
+  </section>
 
-    <!-- Log viewer -->
-    <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
-      <details>
-        <summary class="cursor-pointer text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 select-none">Logs</summary>
-        <div th:replace="~{fragments/log-viewer :: viewer(jobId=${job.id()}, logLines=${job.logLines()}, lastLogSeq=${job.lastLogSeq()})}"></div>
-      </details>
-    </section>
+  <!-- Payload / Result JSON -->
+  <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div th:replace="~{fragments/json-viewer :: viewer('Payload', ${job.payloadJson()})}"></div>
+    <div th:replace="~{fragments/json-viewer :: viewer('Result', ${job.resultJson()})}"></div>
+  </section>
 
-  </main>
+  <!-- Event timeline -->
+  <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Events</h2>
+    <div th:hx-get="'/ui/jobs/' + ${job.id()} + '/events'"
+         hx-trigger="load"
+         hx-target="this"
+         hx-swap="innerHTML">
+      <div th:replace="~{fragments/event-timeline :: events}"
+           th:with="events=${job.events()}"></div>
+    </div>
+  </section>
 
-  <script>
-    document.body.addEventListener('logWatermark', function(e) {
-      var el = document.getElementById('log-watermark');
-      if (el && e.detail && e.detail.value != null) {
-        el.value = e.detail.value;
-      }
-    });
+  <!-- Log viewer -->
+  <section class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+    <details>
+      <summary class="cursor-pointer text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 select-none">
+        Logs
+      </summary>
+      <div
+        th:replace="~{fragments/log-viewer :: viewer(jobId=${job.id()}, logLines=${job.logLines()}, lastLogSeq=${job.lastLogSeq()})}"></div>
+    </details>
+  </section>
 
-    var logContainer = document.getElementById('log-container');
-    if (logContainer) {
-      var observer = new MutationObserver(function() {
-        logContainer.scrollTop = logContainer.scrollHeight;
-      });
-      observer.observe(logContainer, { childList: true, subtree: true });
+</main>
+
+<script>
+  document.body.addEventListener('logWatermark', function (e) {
+    var el = document.getElementById('log-watermark');
+    if (el && e.detail && e.detail.value != null) {
+      el.value = e.detail.value;
     }
-  </script>
+  });
+
+  var logContainer = document.getElementById('log-container');
+  if (logContainer) {
+    var observer = new MutationObserver(function () {
+      logContainer.scrollTop = logContainer.scrollHeight;
+    });
+    observer.observe(logContainer, {childList: true, subtree: true});
+  }
+</script>
 </body>
 </html>

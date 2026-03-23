@@ -1,14 +1,30 @@
 package com.ai.dev.garage.bot.domain;
 
-import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "jobs")
@@ -37,26 +53,26 @@ public class Job {
     @Column(name = "risk_level", nullable = false)
     private RiskLevel riskLevel;
 
-    @Builder.Default
+    @Default
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "approval_state", nullable = false)
     private ApprovalState approvalState = ApprovalState.PENDING;
 
-    @Builder.Default
+    @Default
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
     private JobStatus status = JobStatus.QUEUED;
 
-    @Builder.Default
+    @Default
     @Column(name = "target_executor", nullable = false)
     private String targetExecutor = "mac_mini";
 
     @Column(name = "executor_id", length = 128)
     private String executorId;
 
-    @Builder.Default
+    @Default
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "task_payload_json", columnDefinition = "jsonb", nullable = false)
     private String taskPayloadJson = "{}";
@@ -65,11 +81,11 @@ public class Job {
     @Column(name = "result_json", columnDefinition = "jsonb")
     private String resultJson;
 
-    @Builder.Default
+    @Default
     @Column(nullable = false)
     private Integer attempt = 1;
 
-    @Builder.Default
+    @Default
     @Column(name = "max_attempts", nullable = false)
     private Integer maxAttempts = 3;
 
@@ -91,19 +107,21 @@ public class Job {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
-    /** Set on create response only; not persisted. */
+    /**
+     * Set on create response only; not persisted.
+     */
     @Transient
     private Boolean agentCliInvoked;
 
     @PrePersist
     public void onCreate() {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.systemDefault());
         createdAt = now;
         updatedAt = now;
     }
 
     @PreUpdate
     public void onUpdate() {
-        updatedAt = OffsetDateTime.now();
+        updatedAt = OffsetDateTime.now(ZoneId.systemDefault());
     }
 }

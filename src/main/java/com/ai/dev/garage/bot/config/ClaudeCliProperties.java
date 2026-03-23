@@ -1,19 +1,23 @@
 package com.ai.dev.garage.bot.config;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app.claude")
 @Getter
 @Setter
 public class ClaudeCliProperties {
 
-    private boolean cliInvoke = false;
+    private boolean cliInvoke;
 
-    /** Working directory for the child process (optional). */
+    /**
+     * Working directory for the child process (optional).
+     */
     private String workspace;
 
     /**
@@ -44,13 +48,13 @@ public class ClaudeCliProperties {
      * When true, adds {@code --dangerously-skip-permissions} to plan CLI invocations only.
      * Use only in trusted environments; see Claude Code permissions documentation.
      */
-    private boolean planDangerouslySkipPermissions = false;
+    private boolean planDangerouslySkipPermissions;
 
     /**
      * When true, adds {@code --include-partial-messages} so NDJSON may include {@code stream_event}
      * lines; {@link com.ai.dev.garage.bot.adapter.out.cursor.CliStreamParser} accumulates text deltas.
      */
-    private boolean planIncludePartialMessages = false;
+    private boolean planIncludePartialMessages;
 
     /**
      * Extra CLI arguments inserted after standard plan flags (before the prompt on start, before

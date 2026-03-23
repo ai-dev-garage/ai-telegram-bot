@@ -8,4 +8,5 @@ public record JobStatusView(
     boolean hasError,
     boolean canRetry,
     boolean canCancel
-) {}
+) {
+}

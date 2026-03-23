@@ -2,14 +2,19 @@ package com.ai.dev.garage.bot.adapter.in.telegram.command;
 
 import com.ai.dev.garage.bot.adapter.in.telegram.NavigationStateStore;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
+import com.ai.dev.garage.bot.adapter.in.telegram.command.support.DirectoryListingHelper;
 import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Order(13)
@@ -37,7 +42,7 @@ public class LsCommand implements TelegramCommand {
             return false;
         }
         String t = text.trim();
-        return t.equals("/ls") || t.startsWith("/ls ");
+        return Objects.equals(t, "/ls") || t.startsWith("/ls ");
     }
 
     @Override

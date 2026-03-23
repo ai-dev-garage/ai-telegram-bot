@@ -12,13 +12,17 @@ import com.ai.dev.garage.bot.domain.JobStatus;
 import com.ai.dev.garage.bot.domain.PlanQuestion;
 import com.ai.dev.garage.bot.domain.PlanSession;
 import com.ai.dev.garage.bot.domain.PlanState;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Persists CLI plan round outcomes in a proper Spring transaction (invoked from async executor via
@@ -65,7 +69,7 @@ public class PlanResultPersistenceService {
     private void persistQuestionsRound(PlanSession session, List<ParsedQuestion> allQuestions) {
         int seq = 1;
         for (ParsedQuestion pq : allQuestions) {
-            PlanQuestion question = PlanQuestion.builder()
+            var question = PlanQuestion.builder()
                 .planSession(session)
                 .round(session.getRound())
                 .seq(seq++)

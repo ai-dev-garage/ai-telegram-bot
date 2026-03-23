@@ -5,17 +5,17 @@
 <div th:fragment="table">
   <table class="w-full text-sm text-left">
     <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-      <tr>
-        <th class="px-4 py-3">ID</th>
-        <th class="px-4 py-3">Intent</th>
-        <th class="px-4 py-3">Status</th>
-        <th class="px-4 py-3">Type</th>
-        <th class="px-4 py-3">Risk</th>
-        <th class="px-4 py-3">Executor</th>
-        <th class="px-4 py-3 text-right">Att</th>
-        <th class="px-4 py-3">Created</th>
-        <th class="px-4 py-3">Updated</th>
-      </tr>
+    <tr>
+      <th class="px-4 py-3">ID</th>
+      <th class="px-4 py-3">Intent</th>
+      <th class="px-4 py-3">Status</th>
+      <th class="px-4 py-3">Type</th>
+      <th class="px-4 py-3">Risk</th>
+      <th class="px-4 py-3">Executor</th>
+      <th class="px-4 py-3 text-right">Att</th>
+      <th class="px-4 py-3">Created</th>
+      <th class="px-4 py-3">Updated</th>
+    </tr>
     </thead>
     <tbody th:replace="~{fragments/job-table :: rows}"></tbody>
   </table>
@@ -26,21 +26,21 @@
 
 <!-- Rows only: used by HTMX partial refresh (dashboard failures, filter). -->
 <tbody th:fragment="rows">
-  <tr th:each="j : ${jobs}"
-      class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-      th:onclick="'window.location.href=\'/ui/jobs/' + ${j.id()} + '\''">
-    <td class="px-4 py-3 font-mono text-xs text-gray-500" th:text="${j.id()}"></td>
-    <td class="px-4 py-3 max-w-xs truncate" th:text="${j.intent()}"></td>
-    <td class="px-4 py-3">
-      <span th:replace="~{fragments/status-badge :: badge(${j.status()}, ${j.badgeClass()})}"></span>
-    </td>
-    <td class="px-4 py-3 text-gray-600" th:text="${j.taskType()}"></td>
-    <td class="px-4 py-3 text-gray-600" th:text="${j.riskLevel()}"></td>
-    <td class="px-4 py-3 text-gray-600" th:text="${j.executor()}"></td>
-    <td class="px-4 py-3 text-right text-gray-600" th:text="${j.attempt()}"></td>
-    <td class="px-4 py-3 text-gray-400 text-xs" th:text="${j.createdAt()}"></td>
-    <td class="px-4 py-3 text-gray-400 text-xs" th:text="${j.updatedAt()}"></td>
-  </tr>
+<tr th:each="j : ${jobs}"
+    class="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+    th:onclick="'window.location.href=\'/ui/jobs/' + ${j.id()} + '\''">
+  <td class="px-4 py-3 font-mono text-xs text-gray-500" th:text="${j.id()}"></td>
+  <td class="px-4 py-3 max-w-xs truncate" th:text="${j.intent()}"></td>
+  <td class="px-4 py-3">
+    <span th:replace="~{fragments/status-badge :: badge(${j.status()}, ${j.badgeClass()})}"></span>
+  </td>
+  <td class="px-4 py-3 text-gray-600" th:text="${j.taskType()}"></td>
+  <td class="px-4 py-3 text-gray-600" th:text="${j.riskLevel()}"></td>
+  <td class="px-4 py-3 text-gray-600" th:text="${j.executor()}"></td>
+  <td class="px-4 py-3 text-right text-gray-600" th:text="${j.attempt()}"></td>
+  <td class="px-4 py-3 text-gray-400 text-xs" th:text="${j.createdAt()}"></td>
+  <td class="px-4 py-3 text-gray-400 text-xs" th:text="${j.updatedAt()}"></td>
+</tr>
 </tbody>
 
 </html>

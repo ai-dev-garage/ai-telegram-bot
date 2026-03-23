@@ -1,11 +1,5 @@
 package com.ai.dev.garage.bot.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.ai.dev.garage.bot.application.port.in.JobManagement;
 import com.ai.dev.garage.bot.application.port.in.PlanManagement;
 import com.ai.dev.garage.bot.application.port.out.TodoStore;
@@ -14,15 +8,23 @@ import com.ai.dev.garage.bot.domain.Requester;
 import com.ai.dev.garage.bot.domain.Todo;
 import com.ai.dev.garage.bot.domain.TodoSource;
 import com.ai.dev.garage.bot.domain.TodoStatus;
-import jakarta.persistence.EntityNotFoundException;
-import java.util.List;
-import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jakarta.persistence.EntityNotFoundException;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TodoServiceTest {
@@ -78,20 +80,20 @@ class TodoServiceTest {
 
     @Test
     void shouldDelegateToStoreWhenListTodos() {
-        List<Todo> expected = List.of(openTodo(1));
+        var expected = List.of(openTodo(1));
         when(todoStore.findAll(20, "createdAt", "desc")).thenReturn(expected);
 
-        List<Todo> result = todoService.listTodos(null, 20, "createdAt", "desc");
+        var result = todoService.listTodos(null, 20, "createdAt", "desc");
 
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
     void shouldFilterByStatusWhenListTodosWithStatus() {
-        List<Todo> expected = List.of(openTodo(1));
+        var expected = List.of(openTodo(1));
         when(todoStore.findByStatus(TodoStatus.OPEN, 10, "id", "asc")).thenReturn(expected);
 
-        List<Todo> result = todoService.listTodos(TodoStatus.OPEN, 10, "id", "asc");
+        var result = todoService.listTodos(TodoStatus.OPEN, 10, "id", "asc");
 
         assertThat(result).isEqualTo(expected);
     }
@@ -143,12 +145,12 @@ class TodoServiceTest {
     void shouldCreateAgentJobWhenWorkOnWithAgentMode() {
         Todo todo = openTodo(10);
         when(todoStore.findById(10L)).thenReturn(Optional.of(todo));
-        Job job = Job.builder().id(100L).build();
+        var job = Job.builder().id(100L).build();
         when(jobManagement.createJob("agent Fix bug", todo.getRequester(), "/projects/app"))
             .thenReturn(job);
         when(todoStore.save(any(Todo.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Job result = todoService.workOn(10, "agent", null);
+        var result = todoService.workOn(10, "agent", null);
 
         assertThat(result.getId()).isEqualTo(100L);
         assertThat(todo.getLinkedJobId()).isEqualTo(100L);
@@ -159,12 +161,12 @@ class TodoServiceTest {
     void shouldCreatePlanJobWhenWorkOnWithPlanMode() {
         Todo todo = openTodo(11);
         when(todoStore.findById(11L)).thenReturn(Optional.of(todo));
-        Job job = Job.builder().id(200L).build();
+        var job = Job.builder().id(200L).build();
         when(planManagement.createPlan("Fix bug", todo.getRequester(), "/projects/app"))
             .thenReturn(job);
         when(todoStore.save(any(Todo.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Job result = todoService.workOn(11, "plan", null);
+        var result = todoService.workOn(11, "plan", null);
 
         assertThat(result.getId()).isEqualTo(200L);
         assertThat(todo.getLinkedJobId()).isEqualTo(200L);
@@ -175,7 +177,7 @@ class TodoServiceTest {
     void shouldPreferExplicitWorkspaceOverTodoWorkspace() {
         Todo todo = openTodo(12);
         when(todoStore.findById(12L)).thenReturn(Optional.of(todo));
-        Job job = Job.builder().id(300L).build();
+        var job = Job.builder().id(300L).build();
         when(jobManagement.createJob("agent Fix bug", todo.getRequester(), "/override/path"))
             .thenReturn(job);
         when(todoStore.save(any(Todo.class))).thenAnswer(inv -> inv.getArgument(0));

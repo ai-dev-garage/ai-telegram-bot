@@ -2,8 +2,10 @@ package com.ai.dev.garage.bot.adapter.in.rest.dto;
 
 import java.util.List;
 import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -29,6 +31,6 @@ public class JobResponse {
     private String createdAt;
     private String updatedAt;
     private Boolean agentCliInvoked;
-    @Builder.Default
+    @Default
     private List<String> progressMessages = List.of();
 }

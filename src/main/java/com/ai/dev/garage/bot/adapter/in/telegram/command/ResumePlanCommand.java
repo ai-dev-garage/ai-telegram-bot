@@ -3,10 +3,13 @@ package com.ai.dev.garage.bot.adapter.in.telegram.command;
 import com.ai.dev.garage.bot.adapter.in.telegram.TelegramBotClient;
 import com.ai.dev.garage.bot.application.port.in.PlanManagement;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import java.util.Locale;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @Order(32)
@@ -22,8 +25,10 @@ public class ResumePlanCommand implements TelegramCommand {
 
     @Override
     public boolean canHandle(String text) {
-        if (text == null) return false;
-        String t = text.trim().toLowerCase();
+        if (text == null) {
+            return false;
+        }
+        String t = text.trim().toLowerCase(Locale.ROOT);
         return t.startsWith("/resume-plan") || t.startsWith("/resumeplan");
     }
 
