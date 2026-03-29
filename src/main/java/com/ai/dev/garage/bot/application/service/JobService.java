@@ -12,9 +12,13 @@ import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.ClassificationResult;
 import com.ai.dev.garage.bot.domain.Job;
 import com.ai.dev.garage.bot.domain.JobStatus;
+import com.ai.dev.garage.bot.domain.JobTerminalEvent;
 import com.ai.dev.garage.bot.domain.Requester;
+import com.ai.dev.garage.bot.domain.RiskLevel;
 import com.ai.dev.garage.bot.domain.TaskType;
+import com.ai.dev.garage.bot.domain.WorkflowStep;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +44,7 @@ public class JobService implements JobManagement {
     private final JobLifecycle jobLifecycle;
     private final AllowedPathValidator allowedPathValidator;
     private final TodoCompletionHook todoCompletionHook;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -165,6 +170,7 @@ public class JobService implements JobManagement {
         job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         Job saved = jobRepository.save(job);
         todoCompletionHook.onJobCancelled(saved.getId());
+        eventPublisher.publishEvent(new JobTerminalEvent(saved.getId(), JobStatus.CANCELLED));
         return saved;
     }
 
@@ -184,6 +190,7 @@ public class JobService implements JobManagement {
         job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         jobRepository.save(job);
         todoCompletionHook.onJobCompleted(job.getId());
+        eventPublisher.publishEvent(new JobTerminalEvent(job.getId(), JobStatus.SUCCESS));
     }
 
     @Transactional
@@ -194,6 +201,79 @@ public class JobService implements JobManagement {
         job.setFinishedAt(OffsetDateTime.now(ZoneId.systemDefault()));
         jobRepository.save(job);
         todoCompletionHook.onJobFailed(job.getId());
+        eventPublisher.publishEvent(new JobTerminalEvent(job.getId(), JobStatus.FAILED));
+    }
+
+    /**
+     * Create a child job for a workflow step. The child inherits the parent's requester
+     * and workspace context.
+     */
+    @Transactional
+    public Job createChildJob(Job parent, WorkflowStep step, int stepIndex) {
+        Map<String, Object> parentPayload = jsonCodec.fromJson(parent.getTaskPayloadJson());
+        Map<String, Object> childPayload = new HashMap<>();
+        if (step.taskType() == TaskType.SHELL_COMMAND) {
+            childPayload.put("command", step.intent());
+            Object cwd = parentPayload.get("workspace");
+            if (cwd != null) {
+                childPayload.put("cwd", cwd);
+            }
+        } else if (step.taskType() == TaskType.AGENT_TASK) {
+            childPayload.put("agent_or_command", "agent");
+            childPayload.put("input", step.intent());
+            childPayload.put("context", Map.of());
+            Object workspace = parentPayload.get("workspace");
+            if (workspace != null) {
+                childPayload.put("workspace", workspace);
+            }
+        }
+
+        ApprovalState approval = step.critical() ? ApprovalState.PENDING : ApprovalState.APPROVED;
+        var child = Job.builder()
+            .intent(step.intent())
+            .requester(copyRequester(parent.getRequester()))
+            .taskType(step.taskType())
+            .riskLevel(step.critical() ? RiskLevel.HIGH : RiskLevel.LOW)
+            .approvalState(approval)
+            .status(JobStatus.QUEUED)
+            .taskPayloadJson(jsonCodec.toJson(childPayload))
+            .parentJobId(parent.getId())
+            .stepIndex(stepIndex)
+            .stepId(step.id())
+            .build();
+
+        Job saved = jobRepository.save(child);
+        log.debug("Child job created id={} parentId={} step={} taskType={} critical={}",
+            saved.getId(), parent.getId(), step.id(), step.taskType(), step.critical());
+
+        // For non-critical AGENT_TASK children, trigger the CLI handoff immediately
+        if (step.taskType() == TaskType.AGENT_TASK && !step.critical()) {
+            jobLifecycle.finalizeNewJob(saved,
+                new ClassificationResult(step.taskType(),
+                    childPayload,
+                    saved.getRiskLevel(),
+                    saved.getApprovalState()));
+        }
+
+        return saved;
+    }
+
+    @Transactional
+    public void markAwaitingInput(Job job) {
+        job.setStatus(JobStatus.AWAITING_INPUT);
+        jobRepository.save(job);
+    }
+
+    @Transactional
+    public void requeue(Job job) {
+        job.setStatus(JobStatus.QUEUED);
+        job.setApprovalState(ApprovalState.APPROVED);
+        jobRepository.save(job);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Job> findChildrenByParentId(Long parentJobId) {
+        return jobRepository.findChildrenByParentId(parentJobId);
     }
 
     @Transactional(readOnly = true)

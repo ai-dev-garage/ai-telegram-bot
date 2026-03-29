@@ -11,9 +11,6 @@ import com.ai.dev.garage.bot.application.service.AgentQuestionParser;
 import com.ai.dev.garage.bot.config.ClaudeCliProperties;
 import com.ai.dev.garage.bot.domain.Job;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,11 +29,11 @@ import lombok.extern.slf4j.Slf4j;
  * <a href="https://code.claude.com/docs/en/headless">headless / {@code -p} mode</a>:
  * {@code claude -p "prompt" --output-format stream-json --permission-mode plan}, resume with
  * {@code --resume sessionId} on a follow-up {@code -p} invocation.
+ *
+ * <p>Bean created by {@link com.ai.dev.garage.bot.config.AgentRuntimeConfiguration}.
  */
 @Slf4j
-@Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.runner", name = "agent-runtime", havingValue = "claude")
 public class ClaudePlanCliAdapter implements PlanCliRuntime {
 
     private final ClaudeCliProperties claudeCliProperties;

@@ -23,6 +23,10 @@ public interface JobJpaRepository extends JpaRepository<Job, Long> {
     @Query("SELECT j.status, COUNT(j) FROM Job j GROUP BY j.status")
     List<Object[]> countGroupedByStatus();
 
+    List<Job> findAllByParentJobIdIsNullOrderByIdDesc(Pageable pageable);
+
+    List<Job> findAllByParentJobIdOrderByStepIndexAsc(Long parentJobId);
+
     @Query("SELECT j FROM Job j WHERE j.status = :status AND j.approvalState = :approvalState "
         + "AND j.taskType NOT IN :excludedTypes ORDER BY j.id ASC LIMIT 1")
     Optional<Job> findNextRunnable(JobStatus status, ApprovalState approvalState, List<TaskType> excludedTypes);

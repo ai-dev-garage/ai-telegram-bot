@@ -95,6 +95,15 @@ public class Job {
     @Column(name = "approved_by")
     private String approvedBy;
 
+    @Column(name = "parent_job_id")
+    private Long parentJobId;
+
+    @Column(name = "step_index")
+    private Integer stepIndex;
+
+    @Column(name = "step_id", length = 128)
+    private String stepId;
+
     @Column(name = "started_at")
     private OffsetDateTime startedAt;
 

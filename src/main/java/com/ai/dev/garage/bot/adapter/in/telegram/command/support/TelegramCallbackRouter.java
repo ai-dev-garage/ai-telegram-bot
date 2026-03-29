@@ -6,6 +6,8 @@ import com.ai.dev.garage.bot.adapter.in.telegram.command.CdCommand;
 import com.ai.dev.garage.bot.adapter.in.telegram.command.NavigationCommand;
 import com.ai.dev.garage.bot.adapter.in.telegram.command.PlanCallbackHandler;
 import com.ai.dev.garage.bot.adapter.in.telegram.command.TodoCommand;
+import com.ai.dev.garage.bot.adapter.in.telegram.command.WorkflowCallbackHandler;
+import com.ai.dev.garage.bot.adapter.in.telegram.command.WorkflowCommand;
 import com.ai.dev.garage.bot.application.support.AllowedPathValidator;
 import com.ai.dev.garage.bot.config.RunnerProperties;
 
@@ -41,6 +43,7 @@ public class TelegramCallbackRouter {
     private final CdCommand cdCommand;
     private final PlanCallbackHandler planCallbackHandler;
     private final TodoCommand todoCommand;
+    private final WorkflowCallbackHandler workflowCallbackHandler;
 
     private List<Map.Entry<Predicate<String>, RouteOp>> callbackRoutes;
 
@@ -57,9 +60,8 @@ public class TelegramCallbackRouter {
         callbackRoutes = List.of(
             Map.entry(NavigationCommand.CALLBACK_CLEAR::equals, (id, chatId, userId, d) -> onClearCallback(id, chatId, userId)),
             Map.entry(d -> d.startsWith(DirectoryListingHelper.CD_CALLBACK_PREFIX), this::handleCdCallback),
-            Map.entry(
-                d -> d.startsWith(PlanCallbackHandler.CALLBACK_PREFIX),
-                planCallbackHandler::handleCallback),
+            Map.entry(d -> d.startsWith(PlanCallbackHandler.CALLBACK_PREFIX), planCallbackHandler::handleCallback),
+            Map.entry(d -> d.startsWith(WorkflowCommand.CALLBACK_PREFIX), workflowCallbackHandler::handle),
             Map.entry(d -> d.startsWith(TodoCommand.CALLBACK_PREFIX), this::handleTodoCallback),
             Map.entry(d -> d.startsWith(NavigationCommand.CALLBACK_PREFIX), this::handleNavCallback)
         );

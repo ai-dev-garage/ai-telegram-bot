@@ -8,9 +8,6 @@ import com.ai.dev.garage.bot.application.service.AgentQuestionParser;
 import com.ai.dev.garage.bot.config.CursorCliProperties;
 import com.ai.dev.garage.bot.domain.Job;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,10 +16,12 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Cursor CLI adapter for interactive plan sessions. Bean created by
+ * {@link com.ai.dev.garage.bot.config.AgentRuntimeConfiguration}.
+ */
 @Slf4j
-@Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.runner", name = "agent-runtime", havingValue = "cursor", matchIfMissing = true)
 public class CursorPlanCliAdapter implements PlanCliRuntime {
 
     private final CursorCliProperties cursorCliProperties;

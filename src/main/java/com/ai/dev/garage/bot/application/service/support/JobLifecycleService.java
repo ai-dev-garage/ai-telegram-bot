@@ -29,6 +29,14 @@ public class JobLifecycleService implements JobLifecycle {
         if (classified.taskType() == TaskType.PLAN_TASK) {
             return new FinalizeOutcome(null);
         }
+        if (classified.taskType() == TaskType.WORKFLOW_TASK) {
+            // Workflow tasks go through the poll queue (like shell commands).
+            // They are auto-approved so RunnerWorker picks them up immediately.
+            job.setApprovalState(ApprovalState.APPROVED);
+            jobRepository.save(job);
+            log.debug("Workflow job {} finalized — enters poll queue", job.getId());
+            return new FinalizeOutcome(null);
+        }
         if (classified.taskType() == TaskType.AGENT_TASK) {
             job.setStatus(job.getStatus());
             job.setApprovalState(ApprovalState.APPROVED);

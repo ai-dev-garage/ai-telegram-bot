@@ -8,8 +8,6 @@ import com.ai.dev.garage.bot.domain.Job;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,10 +20,12 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Cursor CLI adapter for agent task execution. Bean created by
+ * {@link com.ai.dev.garage.bot.config.AgentRuntimeConfiguration}.
+ */
 @Slf4j
-@Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.runner", name = "agent-runtime", havingValue = "cursor", matchIfMissing = true)
 public class CursorCliAdapter implements AgentTaskRuntime {
     private static final Logger AGENT_LOG = LoggerFactory.getLogger("com.ai.dev.garage.bot.agent");
 

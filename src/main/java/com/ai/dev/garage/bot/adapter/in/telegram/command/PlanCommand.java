@@ -88,13 +88,13 @@ public class PlanCommand implements TelegramCommand {
     private static String usage() {
         return """
             Usage
-            /plan <prompt> \u2014 start a plan in current working directory
-            /plan @folder <prompt> \u2014 plan in a subfolder of current cwd
-            /plan @alias <prompt> \u2014 use model alias (app.cursor.telegram-model-aliases), if first @token matches
-            /plan @alias @folder <prompt> \u2014 model then folder
+            /plan <prompt> — start a plan in current working directory
+            /plan @folder <prompt> — plan in a subfolder of current cwd
+            /plan @alias <prompt> — use model alias (app.cursor.telegram-model-aliases), if first @token matches
+            /plan @alias @folder <prompt> — model then folder
 
             Example: /plan refactor the auth module
             Example: /plan @myapp propose a caching strategy
-            /models \u2014 list Cursor CLI model ids for aliases""".trim();
+            /models — list Cursor CLI model ids for aliases""".trim();
     }
 }

@@ -273,21 +273,21 @@ public class TodoCommand implements TelegramCommand {
 
     private static String statusIcon(TodoStatus status) {
         return switch (status) {
-            case OPEN -> "\u2B1C";
-            case IN_PROGRESS -> "\u23F3";
-            case DONE -> "\u2705";
-            case CANCELLED -> "\u274C";
+            case OPEN -> "⬜";
+            case IN_PROGRESS -> "⏳";
+            case DONE -> "✅";
+            case CANCELLED -> "❌";
         };
     }
 
     private static String usage() {
         return """
             Usage
-            /todo <text> \u2014 create a new todo
-            /todos \u2014 list all todos
-            /todo <id> \u2014 view todo details
-            /todo done <id> \u2014 mark as done
-            /todo cancel <id> \u2014 cancel todo
-            /todo work <id> \u2014 execute todo (agent or plan)""".trim();
+            /todo <text> — create a new todo
+            /todos — list all todos
+            /todo <id> — view todo details
+            /todo done <id> — mark as done
+            /todo cancel <id> — cancel todo
+            /todo work <id> — execute todo (agent or plan)""".trim();
     }
 }

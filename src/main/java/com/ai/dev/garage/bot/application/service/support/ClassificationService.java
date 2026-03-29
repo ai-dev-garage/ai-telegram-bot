@@ -2,6 +2,7 @@ package com.ai.dev.garage.bot.application.service.support;
 
 import com.ai.dev.garage.bot.application.port.in.support.IntentClassification;
 import com.ai.dev.garage.bot.application.port.out.PolicyProvider;
+import com.ai.dev.garage.bot.config.WorkflowProperties;
 import com.ai.dev.garage.bot.domain.ApprovalState;
 import com.ai.dev.garage.bot.domain.ClassificationResult;
 import com.ai.dev.garage.bot.domain.RiskLevel;
@@ -27,9 +28,12 @@ public class ClassificationService implements IntentClassification {
     private static final Pattern CONFLUENCE_HINT = Pattern.compile(
         "\\bconfluence\\b|create\\s+(a\\s+)?(new\\s+)?page|publish\\s+(to\\s+)?confluence");
     private static final Pattern EXPLICIT_PLAN = Pattern.compile("(?i)^plan\\s+(?<body>.+)$");
+    private static final Pattern EXPLICIT_WORKFLOW = Pattern.compile(
+        "(?i)^workflow\\s+(?<subcommand>plan|run|status|resume)\\s+(?<body>.+)$");
     private static final Pattern EXPLICIT_AGENT = Pattern.compile("(?i)^agent\\s+(?<body>.+)$");
 
     private final PolicyProvider policyProvider;
+    private final WorkflowProperties workflowProperties;
 
     @Override
     public ClassificationResult classify(String intent) {
@@ -39,6 +43,7 @@ public class ClassificationService implements IntentClassification {
 
         return classifyConfluence(normalized, lower)
             .or(() -> classifyExplicitPlan(normalized))
+            .or(() -> workflowProperties.isEnabled() ? classifyExplicitWorkflow(normalized) : Optional.empty())
             .or(() -> classifyExplicitAgent(normalized))
             .orElseGet(() -> classifyShell(normalized, lower, policy));
     }
@@ -68,6 +73,24 @@ public class ClassificationService implements IntentClassification {
             TaskType.PLAN_TASK,
             Map.of("agent_or_command", "plan", "input", body, "context", Map.of()),
             RiskLevel.LOW,
+            ApprovalState.APPROVED
+        ));
+    }
+
+    private static Optional<ClassificationResult> classifyExplicitWorkflow(String normalized) {
+        var m = EXPLICIT_WORKFLOW.matcher(normalized);
+        if (!m.matches()) {
+            return Optional.empty();
+        }
+        String subcommand = m.group("subcommand").trim().toLowerCase(Locale.ROOT);
+        String body = m.group("body").trim();
+        if (body.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new ClassificationResult(
+            TaskType.WORKFLOW_TASK,
+            Map.of("subcommand", subcommand, "input", body, "context", Map.of()),
+            RiskLevel.MEDIUM,
             ApprovalState.APPROVED
         ));
     }
