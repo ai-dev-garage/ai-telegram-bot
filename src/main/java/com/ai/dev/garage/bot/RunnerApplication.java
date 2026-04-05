@@ -4,6 +4,7 @@ import com.ai.dev.garage.bot.config.ClaudeCliProperties;
 import com.ai.dev.garage.bot.config.CursorCliProperties;
 import com.ai.dev.garage.bot.config.RunnerProperties;
 import com.ai.dev.garage.bot.config.TelegramProperties;
+import com.ai.dev.garage.bot.config.WorkflowProperties;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,7 +22,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
     RunnerProperties.class,
     CursorCliProperties.class,
     ClaudeCliProperties.class,
-    TelegramProperties.class
+    TelegramProperties.class,
+    WorkflowProperties.class
 })
 public class RunnerApplication {
     public static void main(String[] args) {

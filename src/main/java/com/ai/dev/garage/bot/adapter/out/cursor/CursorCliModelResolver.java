@@ -4,9 +4,6 @@ import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.config.CursorCliProperties;
 import com.ai.dev.garage.bot.domain.Job;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,11 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Resolves the value to pass to Cursor CLI {@code --model}: job payload {@code cliModel} wins, else
  * {@link CursorCliProperties#getDefaultModel()}. Empty means omit the flag.
+ *
+ * <p>Bean created by {@link com.ai.dev.garage.bot.config.AgentRuntimeConfiguration}.
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.runner", name = "agent-runtime", havingValue = "cursor", matchIfMissing = true)
 public class CursorCliModelResolver {
 
     public static final String CLI_MODEL_PAYLOAD_KEY = "cliModel";

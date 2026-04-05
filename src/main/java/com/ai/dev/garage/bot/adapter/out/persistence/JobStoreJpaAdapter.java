@@ -36,6 +36,16 @@ public class JobStoreJpaAdapter implements JobStore {
     }
 
     @Override
+    public List<Job> findRecentTopLevelOrderedByIdDesc(int limit) {
+        return jobJpaRepository.findAllByParentJobIdIsNullOrderByIdDesc(PageRequest.of(0, Math.max(1, limit)));
+    }
+
+    @Override
+    public List<Job> findChildrenByParentId(Long parentJobId) {
+        return jobJpaRepository.findAllByParentJobIdOrderByStepIndexAsc(parentJobId);
+    }
+
+    @Override
     public Optional<Job> findNextRunnableJob() {
         return jobJpaRepository.findNextRunnable(
             JobStatus.QUEUED, ApprovalState.APPROVED,

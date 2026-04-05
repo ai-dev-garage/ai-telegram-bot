@@ -40,6 +40,10 @@ public class RunnerWorker {
         job.setExecutorId(runnerProperties.getExecutorId());
         log.debug("Executing job id={} taskType={}", job.getId(), job.getTaskType());
         TaskExecutionResult result = taskExecutionOrchestrator.execute(job, jobLogAppender);
+        if (result.selfManaged()) {
+            log.debug("Job id={} is self-managed by executor — skipping state transition", job.getId());
+            return;
+        }
         if (result.success()) {
             jobService.markCompleted(job, result.summary(), result.exitCode());
             log.debug("Job id={} completed exitCode={}", job.getId(), result.exitCode());

@@ -15,4 +15,12 @@
     <suppress files=".*src[/\\]test[/\\]java.*" checks="MagicNumber|AnnotationLocation|DeclarationOrder|ImportOrder"/>
 
     <suppress files=".*Config\.java" checks="FinalClass"/>
+
+    <!-- Spring @Bean factory methods: parameter count is driven by DI injection -->
+    <suppress files=".*Configuration\.java" checks="ParameterNumber"/>
+
+    <!-- Lombok @UtilityClass generates a private throwing ctor; Checkstyle cannot see it -->
+    <suppress files="WorkflowStatusFormatter\.java" checks="HideUtilityClassConstructor"/>
+    <suppress files="WorkflowPlannerJsonParser\.java" checks="HideUtilityClassConstructor"/>
+    <suppress files="WorkflowGraphDeserializer\.java" checks="HideUtilityClassConstructor"/>
 </suppressions>

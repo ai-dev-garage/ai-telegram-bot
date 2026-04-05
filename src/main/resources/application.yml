@@ -68,6 +68,14 @@ app:
     #   sonnet: claude-sonnet-4-20250514
     #   opus: claude-opus-4-20250514
     telegram-model-aliases: {}
+  workflow:
+    enabled: ${WORKFLOW_ENABLED:true}
+    planner-timeout-seconds: ${WORKFLOW_PLANNER_TIMEOUT_SECONDS:120}
+    step-timeout-seconds: ${WORKFLOW_STEP_TIMEOUT_SECONDS:600}
+    max-steps: ${WORKFLOW_MAX_STEPS:10}
+    # Only used when AGENT_RUNTIME=hybrid:
+    planner-runtime: ${WORKFLOW_PLANNER_RUNTIME:claude}
+    executor-runtime: ${WORKFLOW_EXECUTOR_RUNTIME:cursor}
   claude:
     cli-invoke: ${CLAUDE_CLI_INVOKE:false}
     workspace: ${CLAUDE_CLI_WORKSPACE:${AGENT_CLI_WORKSPACE:}}

@@ -2,9 +2,6 @@ package com.ai.dev.garage.bot.adapter.out.cursor;
 
 import com.ai.dev.garage.bot.config.CursorCliProperties;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -18,11 +15,11 @@ import lombok.extern.slf4j.Slf4j;
  * Runs {@code <executable> <planPrefixArgs...> --list-models} to list model ids. Uses the global
  * {@code --list-models} flag (see Cursor CLI parameters) instead of the {@code agent models} subcommand so
  * listing does not start an agent session or bill model usage.
+ *
+ * <p>Bean created by {@link com.ai.dev.garage.bot.config.AgentRuntimeConfiguration}.
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = "app.runner", name = "agent-runtime", havingValue = "cursor", matchIfMissing = true)
 public class CursorAgentModelsCliRunner {
 
     private static final int TIMEOUT_SECONDS = 60;
