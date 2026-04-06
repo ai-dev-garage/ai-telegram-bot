@@ -1,4 +1,4 @@
-package com.ai.dev.garage.bot.adapter.out.cursor.support;
+package com.ai.dev.garage.bot.adapter.out.cli.support;
 
 import java.util.ArrayList;
 import java.util.List;

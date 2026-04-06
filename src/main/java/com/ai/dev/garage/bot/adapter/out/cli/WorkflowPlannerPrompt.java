@@ -1,4 +1,4 @@
-package com.ai.dev.garage.bot.adapter.out.claude;
+package com.ai.dev.garage.bot.adapter.out.cli;
 
 /**
  * Builds the structured prompt sent to the planner CLI to decompose a user intent

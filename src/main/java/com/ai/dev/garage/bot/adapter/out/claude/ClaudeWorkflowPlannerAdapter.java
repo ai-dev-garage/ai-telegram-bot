@@ -17,9 +17,11 @@ public class ClaudeWorkflowPlannerAdapter extends AbstractWorkflowPlannerAdapter
 
     private final ClaudeCliProperties claudeCliProperties;
 
-    public ClaudeWorkflowPlannerAdapter(ClaudeCliProperties claudeCliProperties,
-                                        WorkflowProperties workflowProperties,
-                                        JsonCodec jsonCodec) {
+    public ClaudeWorkflowPlannerAdapter(
+        ClaudeCliProperties claudeCliProperties,
+        WorkflowProperties workflowProperties,
+        JsonCodec jsonCodec
+    ) {
         super(workflowProperties, jsonCodec);
         this.claudeCliProperties = claudeCliProperties;
     }
@@ -46,14 +48,7 @@ public class ClaudeWorkflowPlannerAdapter extends AbstractWorkflowPlannerAdapter
     }
 
     @Override
-    protected String resolveWorkspace(String workspace) {
-        if (workspace != null && !workspace.isBlank()) {
-            return workspace.trim();
-        }
-        String fallback = claudeCliProperties.getWorkspace();
-        if (fallback != null && !fallback.isBlank()) {
-            return fallback.trim();
-        }
-        return null;
+    protected String getWorkspaceFallback() {
+        return claudeCliProperties.getWorkspace();
     }
 }

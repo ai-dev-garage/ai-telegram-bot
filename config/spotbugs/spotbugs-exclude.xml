@@ -51,6 +51,10 @@
         <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
     <Match>
+        <Class name="~com\.ai\.dev\.garage\.bot\.adapter\.out\.cli\..+"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
         <Class name="~com\.ai\.dev\.garage\.bot\.application\.port\.out\..+"/>
         <Bug pattern="EI_EXPOSE_REP"/>
     </Match>

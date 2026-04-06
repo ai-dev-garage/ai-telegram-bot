@@ -1,4 +1,4 @@
-package com.ai.dev.garage.bot.adapter.out.cursor;
+package com.ai.dev.garage.bot.adapter.out.cli;
 
 import com.ai.dev.garage.bot.application.port.out.PlanSessionResult;
 import com.ai.dev.garage.bot.application.port.out.PlanSessionResult.ParsedMessage;

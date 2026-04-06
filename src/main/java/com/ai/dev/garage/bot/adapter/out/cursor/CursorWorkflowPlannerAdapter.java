@@ -5,7 +5,6 @@ import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.config.CursorCliProperties;
 import com.ai.dev.garage.bot.config.WorkflowProperties;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,19 +29,7 @@ public class CursorWorkflowPlannerAdapter extends AbstractWorkflowPlannerAdapter
 
     @Override
     protected List<String> buildCommand(String prompt, String workspace) {
-        List<String> cmd = new ArrayList<>();
-        cmd.add(cursorCliProperties.getExecutable());
-        List<String> prefix = cursorCliProperties.getPlanPrefixArgs();
-        if (prefix != null) {
-            for (String segment : prefix) {
-                if (segment != null && !segment.isBlank()) {
-                    cmd.add(segment.trim());
-                }
-            }
-        }
-        cmd.add("--print");
-        cmd.add("--force");
-        cmd.add("--trust");
+        List<String> cmd = CursorCommandBuilder.baseCommand(cursorCliProperties, "--force");
         if (workspace != null && !workspace.isBlank()) {
             cmd.add("--workspace");
             cmd.add(workspace.trim());
@@ -52,14 +39,7 @@ public class CursorWorkflowPlannerAdapter extends AbstractWorkflowPlannerAdapter
     }
 
     @Override
-    protected String resolveWorkspace(String workspace) {
-        if (workspace != null && !workspace.isBlank()) {
-            return workspace.trim();
-        }
-        String fallback = cursorCliProperties.getWorkspace();
-        if (fallback != null && !fallback.isBlank()) {
-            return fallback.trim();
-        }
-        return null;
+    protected String getWorkspaceFallback() {
+        return cursorCliProperties.getWorkspace();
     }
 }

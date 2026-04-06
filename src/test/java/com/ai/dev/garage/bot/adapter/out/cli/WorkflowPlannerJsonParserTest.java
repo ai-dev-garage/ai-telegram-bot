@@ -1,4 +1,4 @@
-package com.ai.dev.garage.bot.adapter.out.claude;
+package com.ai.dev.garage.bot.adapter.out.cli;
 
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.application.service.support.JsonService;
