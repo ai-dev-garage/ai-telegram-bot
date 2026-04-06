@@ -1,4 +1,4 @@
-package com.ai.dev.garage.bot.adapter.out.cursor;
+package com.ai.dev.garage.bot.adapter.out.cli;
 
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.domain.Job;

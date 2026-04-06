@@ -1,6 +1,6 @@
-package com.ai.dev.garage.bot.adapter.out.cursor;
+package com.ai.dev.garage.bot.adapter.out.cli;
 
-import com.ai.dev.garage.bot.adapter.out.cursor.support.CliStreamParseState;
+import com.ai.dev.garage.bot.adapter.out.cli.support.CliStreamParseState;
 
 import org.springframework.stereotype.Component;
 

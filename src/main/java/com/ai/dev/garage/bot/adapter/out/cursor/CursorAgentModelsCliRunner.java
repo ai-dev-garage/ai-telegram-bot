@@ -4,7 +4,6 @@ import com.ai.dev.garage.bot.config.CursorCliProperties;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -32,16 +31,7 @@ public class CursorAgentModelsCliRunner {
      * @return combined stdout/stderr; empty string if process produced no bytes
      */
     public String runListModels() throws IOException, InterruptedException {
-        List<String> cmd = new ArrayList<>();
-        cmd.add(cursorCliProperties.getExecutable());
-        List<String> prefix = cursorCliProperties.getPlanPrefixArgs();
-        if (prefix != null) {
-            for (String segment : prefix) {
-                if (segment != null && !segment.isBlank()) {
-                    cmd.add(segment.trim());
-                }
-            }
-        }
+        List<String> cmd = CursorCommandBuilder.executableWithPrefix(cursorCliProperties);
         cmd.add("--list-models");
         ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true);
         Process process = pb.start();

@@ -1,7 +1,5 @@
 package com.ai.dev.garage.bot.adapter.out.cli;
 
-import com.ai.dev.garage.bot.adapter.out.claude.WorkflowPlannerJsonParser;
-import com.ai.dev.garage.bot.adapter.out.claude.WorkflowPlannerPrompt;
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.application.port.out.WorkflowPlannerRuntime;
 import com.ai.dev.garage.bot.config.WorkflowProperties;
@@ -44,9 +42,20 @@ public abstract class AbstractWorkflowPlannerAdapter implements WorkflowPlannerR
 
     protected abstract List<String> buildCommand(String prompt, String workspace);
 
-    protected abstract String resolveWorkspace(String workspace);
+    protected abstract String getWorkspaceFallback();
 
     protected abstract String runtimeName();
+
+    protected final String resolveWorkspace(String workspace) {
+        if (workspace != null && !workspace.isBlank()) {
+            return workspace.trim();
+        }
+        String fallback = getWorkspaceFallback();
+        if (fallback != null && !fallback.isBlank()) {
+            return fallback.trim();
+        }
+        return null;
+    }
 
     @Override
     public WorkflowGraph decompose(String intent, String workspace) {

@@ -1,23 +1,15 @@
 package com.ai.dev.garage.bot.adapter.out.claude;
 
-import com.ai.dev.garage.bot.adapter.out.cursor.CliStreamParser;
-import com.ai.dev.garage.bot.adapter.out.cursor.CliWorkspaceResolver;
-import com.ai.dev.garage.bot.adapter.out.cursor.PlanCliSessionResultMapper;
+import com.ai.dev.garage.bot.adapter.out.cli.AbstractPlanCliAdapter;
+import com.ai.dev.garage.bot.adapter.out.cli.CliStreamParser;
+import com.ai.dev.garage.bot.adapter.out.cli.CliWorkspaceResolver;
 import com.ai.dev.garage.bot.application.port.out.JobLogAppender;
-import com.ai.dev.garage.bot.application.port.out.PlanCliRuntime;
-import com.ai.dev.garage.bot.application.port.out.PlanSessionResult;
-import com.ai.dev.garage.bot.application.port.out.PlanSessionResult.ParsedMessage;
 import com.ai.dev.garage.bot.application.service.AgentQuestionParser;
 import com.ai.dev.garage.bot.config.ClaudeCliProperties;
 import com.ai.dev.garage.bot.domain.Job;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Runs Claude Code in print mode for Telegram plan sessions. Uses the same NDJSON stream parsing
@@ -32,45 +24,60 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Bean created by {@link com.ai.dev.garage.bot.config.AgentRuntimeConfiguration}.
  */
-@Slf4j
-@RequiredArgsConstructor
-public class ClaudePlanCliAdapter implements PlanCliRuntime {
+public class ClaudePlanCliAdapter extends AbstractPlanCliAdapter {
 
     private final ClaudeCliProperties claudeCliProperties;
-    private final CliWorkspaceResolver workspaceResolver;
-    private final CliStreamParser streamParser;
-    private final AgentQuestionParser questionParser;
-    private final JobLogAppender jobLogAppender;
 
-    @Override
-    public PlanSessionResult startPlan(Job job, String prompt) {
-        String fullPrompt = appendPlanInstructions(prompt);
-        List<String> cmd = new ArrayList<>();
-        cmd.add("claude");
-        cmd.add("-p");
-        cmd.add(fullPrompt);
-        appendPlanFlagsAfterPrompt(cmd);
-        return runAndParse(job, cmd);
+    public ClaudePlanCliAdapter(
+        ClaudeCliProperties claudeCliProperties,
+        CliWorkspaceResolver workspaceResolver,
+        CliStreamParser streamParser,
+        AgentQuestionParser questionParser,
+        JobLogAppender jobLogAppender
+    ) {
+        super(workspaceResolver, streamParser, questionParser, jobLogAppender);
+        this.claudeCliProperties = claudeCliProperties;
     }
 
     @Override
-    public PlanSessionResult resumePlan(Job job, String cliSessionId, String userMessage) {
+    protected String runtimeName() {
+        return "Claude";
+    }
+
+    @Override
+    protected String getWorkspaceProperty() {
+        return claudeCliProperties.getWorkspace();
+    }
+
+    @Override
+    protected String getPlanPromptSuffix() {
+        return claudeCliProperties.getPlanPrompt();
+    }
+
+    @Override
+    protected List<String> buildStartCommand(Job job, String workspace, String prompt) {
+        List<String> cmd = new ArrayList<>();
+        cmd.add("claude");
+        cmd.add("-p");
+        cmd.add(prompt);
+        appendPlanFlags(cmd);
+        return cmd;
+    }
+
+    @Override
+    protected List<String> buildResumeCommand(Job job, String workspace,
+                                              String cliSessionId, String userMessage) {
         List<String> cmd = new ArrayList<>();
         cmd.add("claude");
         cmd.add("-p");
         cmd.add(userMessage);
-        appendPlanFlagsAfterPrompt(cmd);
+        appendPlanFlags(cmd);
         cmd.add("--resume");
         cmd.add(cliSessionId);
-        return runAndParse(job, cmd);
+        return cmd;
     }
 
-    /**
-     * Flags after the {@code -p} prompt, per
-     * <a href="https://code.claude.com/docs/en/headless">headless mode</a> examples
-     * ({@code claude -p "..." --output-format json --resume ...}).
-     */
-    private void appendPlanFlagsAfterPrompt(List<String> cmd) {
+    private void appendPlanFlags(List<String> cmd) {
         cmd.add("--output-format");
         cmd.add("stream-json");
         String mode = claudeCliProperties.getPlanPermissionMode();
@@ -92,67 +99,5 @@ public class ClaudePlanCliAdapter implements PlanCliRuntime {
                 }
             }
         }
-    }
-
-    private PlanSessionResult runAndParse(Job job, List<String> cmd) {
-        jobLogAppender.append(job.getId(), "[Claude plan CLI starting]");
-        log.info("Starting Claude plan CLI for job {}: {}", job.getId(), maskResumeArg(cmd));
-        try {
-            ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true);
-            String workspaceDir = workspaceResolver.resolve(job, claudeCliProperties.getWorkspace());
-            if (workspaceDir != null && !workspaceDir.isBlank()) {
-                pb.directory(new File(workspaceDir.trim()));
-            }
-            Process process = pb.start();
-
-            CliStreamParser.CliStreamResult streamResult = streamParser.parse(process.getInputStream());
-
-            int exitCode = process.waitFor();
-            log.info("Claude plan CLI finished for job {} exitCode={} durationMs={}",
-                job.getId(), exitCode, streamResult.durationMs());
-
-            jobLogAppender.append(job.getId(),
-                "[Claude plan CLI finished — exitCode=" + exitCode + "]");
-
-            List<ParsedMessage> messages = new ArrayList<>();
-            for (String text : streamResult.assistantMessages()) {
-                var questions = questionParser.parse(text);
-                messages.add(new ParsedMessage(text, questions));
-            }
-
-            return PlanCliSessionResultMapper.fromStream(
-                job.getId(), "Claude", streamResult, exitCode, messages);
-        } catch (IOException e) {
-            log.error("Failed to start Claude plan CLI for job {}: {}", job.getId(), e.getMessage(), e);
-            jobLogAppender.append(job.getId(), "Failed to start Claude plan CLI: " + e.getMessage());
-            return new PlanSessionResult(
-                null, List.of(), false, "", false, "Failed to start Claude plan CLI: " + e.getMessage());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Claude plan CLI interrupted for job {}", job.getId(), e);
-            return new PlanSessionResult(
-                null, List.of(), false, "", false, "Claude plan CLI interrupted");
-        }
-    }
-
-    private String appendPlanInstructions(String prompt) {
-        String suffix = claudeCliProperties.getPlanPrompt();
-        if (suffix == null || suffix.isBlank()) {
-            return prompt;
-        }
-        return prompt + "\n\n" + suffix;
-    }
-
-    /**
-     * Avoid logging huge prompts; keep resume id visible for debugging.
-     */
-    private static String maskResumeArg(List<String> cmd) {
-        int resumeIdx = cmd.indexOf("--resume");
-        if (resumeIdx < 0 || resumeIdx + 1 >= cmd.size()) {
-            return String.join(" ", cmd);
-        }
-        List<String> copy = new ArrayList<>(cmd);
-        copy.set(resumeIdx + 1, "<sessionId>");
-        return String.join(" ", copy);
     }
 }

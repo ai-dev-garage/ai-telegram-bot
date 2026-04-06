@@ -1,4 +1,4 @@
-package com.ai.dev.garage.bot.adapter.out.claude;
+package com.ai.dev.garage.bot.adapter.out.cli;
 
 import com.ai.dev.garage.bot.application.port.out.JsonCodec;
 import com.ai.dev.garage.bot.application.service.WorkflowGraphDeserializer;
@@ -22,8 +22,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class WorkflowPlannerJsonParser {
 
-    private static final Pattern JSON_BLOCK = Pattern.compile(
-        "```(?:json)?\\s*\\n?(\\{.*?})\\s*```", Pattern.DOTALL);
+    private static final Pattern JSON_BLOCK = Pattern.compile("```(?:json)?\\s*\\n?(\\{.*?})\\s*```", Pattern.DOTALL);
 
     @SuppressWarnings("unchecked") // JSON codec returns untyped maps; safe cast to List<Map>
     public static WorkflowGraph parse(String rawOutput, JsonCodec jsonCodec) {

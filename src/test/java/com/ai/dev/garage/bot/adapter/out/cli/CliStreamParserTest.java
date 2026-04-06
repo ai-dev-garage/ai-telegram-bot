@@ -1,4 +1,4 @@
-package com.ai.dev.garage.bot.adapter.out.cursor;
+package com.ai.dev.garage.bot.adapter.out.cli;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

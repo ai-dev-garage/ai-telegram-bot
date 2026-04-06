@@ -49,6 +49,7 @@ dependencies {
     implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'org.postgresql:postgresql'
     implementation 'org.springframework.integration:spring-integration-file'
+    implementation "org.apache.commons:commons-text:${apacheCommonsTextVersion}"
 
     // WebFlux / WebClient: on macOS, pull the correct native DNS resolver so startup does not log
     // UnsatisfiedLinkError from DnsServerAddressStreamProviders (reactor-netty / netty-resolver-dns).

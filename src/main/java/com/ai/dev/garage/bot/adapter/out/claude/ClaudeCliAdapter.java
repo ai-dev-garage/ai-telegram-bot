@@ -1,80 +1,55 @@
 package com.ai.dev.garage.bot.adapter.out.claude;
 
 import com.ai.dev.garage.bot.adapter.out.agenttask.AgentTaskFileWriter;
-import com.ai.dev.garage.bot.adapter.out.cursor.CliWorkspaceResolver;
-import com.ai.dev.garage.bot.application.port.out.AgentTaskRuntime;
+import com.ai.dev.garage.bot.adapter.out.cli.AbstractAgentTaskCliAdapter;
+import com.ai.dev.garage.bot.adapter.out.cli.CliWorkspaceResolver;
 import com.ai.dev.garage.bot.application.port.out.JobLogAppender;
 import com.ai.dev.garage.bot.config.ClaudeCliProperties;
 import com.ai.dev.garage.bot.domain.Job;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Claude Code CLI adapter for agent task execution. Bean created by
  * {@link com.ai.dev.garage.bot.config.AgentRuntimeConfiguration}.
  */
-@Slf4j
-@RequiredArgsConstructor
-public class ClaudeCliAdapter implements AgentTaskRuntime {
-    private static final Logger AGENT_LOG = LoggerFactory.getLogger("com.ai.dev.garage.bot.agent");
+public class ClaudeCliAdapter extends AbstractAgentTaskCliAdapter {
 
-    private final AgentTaskFileWriter agentTaskFileWriter;
     private final ClaudeCliProperties claudeCliProperties;
-    private final JobLogAppender jobLogAppender;
-    private final CliWorkspaceResolver workspaceResolver;
+
+    public ClaudeCliAdapter(
+        AgentTaskFileWriter agentTaskFileWriter,
+        ClaudeCliProperties claudeCliProperties,
+        JobLogAppender jobLogAppender,
+        CliWorkspaceResolver workspaceResolver
+    ) {
+        super(agentTaskFileWriter, jobLogAppender, workspaceResolver);
+        this.claudeCliProperties = claudeCliProperties;
+    }
 
     @Override
-    public boolean startForJob(Job job) {
-        agentTaskFileWriter.writePendingTaskFile(job);
-        if (!claudeCliProperties.isCliInvoke()) {
-            return false;
-        }
+    protected boolean isCliInvoke() {
+        return claudeCliProperties.isCliInvoke();
+    }
+
+    @Override
+    protected String getWorkspaceProperty() {
+        return claudeCliProperties.getWorkspace();
+    }
+
+    @Override
+    protected String runtimeName() {
+        return "Claude";
+    }
+
+    @Override
+    protected List<String> buildCommand(Job job, String workspace) {
         List<String> cmd = new ArrayList<>();
         if (claudeCliProperties.getLaunchCommand() != null) {
             cmd.addAll(claudeCliProperties.getLaunchCommand());
         }
         cmd.add(claudeCliProperties.getPrompt());
-        try {
-            ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true);
-            String workspaceDir = workspaceResolver.resolve(job, claudeCliProperties.getWorkspace());
-            if (workspaceDir != null && !workspaceDir.isBlank()) {
-                pb.directory(new File(workspaceDir.trim()));
-            }
-            Process process = pb.start();
-            jobLogAppender.append(job.getId(), "[Claude CLI started — agent activity will stream here]");
-            new Thread(() -> streamLogs(job.getId(), process), "claude-cli-job-" + job.getId()).start();
-            return true;
-        } catch (IOException e) {
-            AGENT_LOG.error("Failed to start Claude CLI for job {}: {}", job.getId(), e.getMessage(), e);
-            jobLogAppender.append(job.getId(), "Failed to start Claude CLI: " + e.getMessage());
-            return false;
-        }
-    }
-
-    private void streamLogs(Long jobId, Process process) {
-        try (BufferedReader reader = new BufferedReader(
-            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-            String line = reader.readLine();
-            while (line != null) {
-                if (!line.isBlank()) {
-                    jobLogAppender.append(jobId, line);
-                }
-                line = reader.readLine();
-            }
-        } catch (IOException e) {
-            jobLogAppender.append(jobId, "Claude stream error: " + e.getMessage());
-        }
+        return cmd;
     }
 }
