@@ -3,7 +3,7 @@
 # One-click local run for ai-telegram-bot (Spring Boot + PostgreSQL + Telegram polling).
 #
 # Usage:
-#   ./scripts/run-telegram-runner-local.sh [--agent cursor|claude]
+#   ./scripts/run-telegram-runner-local.sh [--agent cursor|claude|hybrid]
 #
 # Optional:
 #   --agent   One-shot override for AGENT_RUNTIME (after .env is loaded, this wins).
@@ -13,13 +13,17 @@
 #   ALLOWED_TELEGRAM_USER_IDS   (numeric ids, comma-separated)
 #
 # Agent runtime (set in .env or via --agent):
-#   AGENT_RUNTIME — cursor (default) or claude; selects Spring AgentTaskRuntime.
+#   AGENT_RUNTIME — cursor (default), claude, or hybrid; selects Spring AgentTaskRuntime.
 #
 # When AGENT_RUNTIME=cursor (defaults for local dev if unset in .env):
 #   CURSOR_CLI_INVOKE, CURSOR_CLI_WORKSPACE — see config.example.env
 #
 # When AGENT_RUNTIME=claude:
 #   CLAUDE_CLI_INVOKE, CLAUDE_CLI_WORKSPACE — Claude CLI uses workspace as process cwd
+#
+# When AGENT_RUNTIME=hybrid:
+#   WORKFLOW_PLANNER_RUNTIME / WORKFLOW_EXECUTOR_RUNTIME (see config.example.env).
+#   This script sets default invoke + workspace for both Cursor and Claude so either side can run.
 #
 # Spring profile `local` is set by default below. Optional overrides: copy
 #   src/main/resources/application-local.example.yml -> application-local.yml (gitignored).
@@ -35,24 +39,28 @@ show_help() {
 One-click local run for ai-telegram-bot (Spring Boot + PostgreSQL + Telegram polling).
 
 Usage:
-  $(basename "$0") [--agent cursor|claude]
+  $(basename "$0") [--agent cursor|claude|hybrid]
 
 Options:
   -h, --help     Show this help and exit.
-  --agent X      One-shot override for AGENT_RUNTIME (cursor|claude), after .env is loaded.
+  --agent X      One-shot override for AGENT_RUNTIME (cursor|claude|hybrid), after .env is loaded.
 
 Required env vars:
   TELEGRAM_BOT_TOKEN
   ALLOWED_TELEGRAM_USER_IDS   (numeric ids, comma-separated; also loadable from .env)
 
 Agent runtime (set in .env or via --agent):
-  AGENT_RUNTIME — cursor (default) or claude; selects Spring AgentTaskRuntime.
+  AGENT_RUNTIME — cursor (default), claude, or hybrid; selects Spring AgentTaskRuntime.
 
 When AGENT_RUNTIME=cursor (defaults for local dev if unset in .env):
   CURSOR_CLI_INVOKE, CURSOR_CLI_WORKSPACE — see config.example.env
 
 When AGENT_RUNTIME=claude:
   CLAUDE_CLI_INVOKE, CLAUDE_CLI_WORKSPACE — Claude CLI uses workspace as process cwd
+
+When AGENT_RUNTIME=hybrid:
+  WORKFLOW_PLANNER_RUNTIME / WORKFLOW_EXECUTOR_RUNTIME — see config.example.env.
+  Default invoke + workspace are applied for both Cursor and Claude (typical local dev).
 
 Optional (bootRun app JVM — overrides gradle.properties when set, e.g. from .env):
   BOOTRUN_JVM_XMS, BOOTRUN_JVM_XMX  — passed as ./gradlew -PbootRunJvmXms=/Xmx= (see README / gradle.properties).
@@ -69,7 +77,7 @@ while [[ $# -gt 0 ]]; do
     --agent)
       CLI_AGENT="${2:-}"
       if [[ -z "$CLI_AGENT" ]]; then
-        echo "Usage: $0 [--agent cursor|claude]"
+        echo "Usage: $0 [--agent cursor|claude|hybrid]"
         exit 1
       fi
       shift 2
@@ -108,20 +116,29 @@ export TELEGRAM_ENABLED="${TELEGRAM_ENABLED:-true}"
 
 export AGENT_RUNTIME="${AGENT_RUNTIME:-cursor}"
 case "$AGENT_RUNTIME" in
-  cursor|claude) ;;
+  cursor|claude|hybrid) ;;
   *)
-    echo "AGENT_RUNTIME must be cursor or claude (got: $AGENT_RUNTIME)"
+    echo "AGENT_RUNTIME must be cursor, claude, or hybrid (got: $AGENT_RUNTIME)"
     exit 1
     ;;
 esac
 
-if [[ "$AGENT_RUNTIME" == "cursor" ]]; then
-  export CURSOR_CLI_INVOKE="${CURSOR_CLI_INVOKE:-true}"
-  export CURSOR_CLI_WORKSPACE="${CURSOR_CLI_WORKSPACE:-$BOT_ROOT}"
-else
-  export CLAUDE_CLI_INVOKE="${CLAUDE_CLI_INVOKE:-true}"
-  export CLAUDE_CLI_WORKSPACE="${CLAUDE_CLI_WORKSPACE:-$BOT_ROOT}"
-fi
+case "$AGENT_RUNTIME" in
+  cursor)
+    export CURSOR_CLI_INVOKE="${CURSOR_CLI_INVOKE:-true}"
+    export CURSOR_CLI_WORKSPACE="${CURSOR_CLI_WORKSPACE:-$BOT_ROOT}"
+    ;;
+  claude)
+    export CLAUDE_CLI_INVOKE="${CLAUDE_CLI_INVOKE:-true}"
+    export CLAUDE_CLI_WORKSPACE="${CLAUDE_CLI_WORKSPACE:-$BOT_ROOT}"
+    ;;
+  hybrid)
+    export CURSOR_CLI_INVOKE="${CURSOR_CLI_INVOKE:-true}"
+    export CURSOR_CLI_WORKSPACE="${CURSOR_CLI_WORKSPACE:-$BOT_ROOT}"
+    export CLAUDE_CLI_INVOKE="${CLAUDE_CLI_INVOKE:-true}"
+    export CLAUDE_CLI_WORKSPACE="${CLAUDE_CLI_WORKSPACE:-$BOT_ROOT}"
+    ;;
+esac
 
 cd "$BOT_ROOT"
 echo "Starting PostgreSQL via docker compose..."
